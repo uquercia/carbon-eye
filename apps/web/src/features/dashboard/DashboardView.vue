@@ -384,22 +384,12 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         <section class="panel training-panel">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">训练结果与影响分析</p>
-              <h2><Image :size="18" /> 校园图片识别预留区</h2>
+              <p class="eyebrow">识别结果与影响分析</p>
+              <h2><Image :size="18" /> 可能预测结果图</h2>
             </div>
           </div>
 
           <div class="training-content">
-            <div class="upload-inline">
-              <button class="upload-inline-button" type="button" :disabled="uploading" @click="openUploadPicker">
-                <Upload :size="22" />
-              </button>
-              <div>
-                <strong>上传校园图片后显示识别结果</strong>
-                <span>{{ uploadStatus }}</span>
-              </div>
-            </div>
-
             <div class="training-gallery">
               <article v-for="imageItem in trainingImages" :key="imageItem.id" class="training-card">
                 <img :src="imageItem.imageUrl" :alt="imageItem.title" />

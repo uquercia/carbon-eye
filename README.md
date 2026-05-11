@@ -122,6 +122,17 @@ http://127.0.0.1:8000/docs
 docs/API.md
 ```
 
+## 一键启动前后端
+
+如果你想像 Spring Boot 的 `Application` 一样只运行一个入口文件，可以直接执行根目录的启动脚本：
+
+```powershell
+cd G:\codex\carbon-eye-campus
+python run_dev.py
+```
+
+它会先启动后端，再启动前端。
+
 ## 后续未完成任务
 
 - 真实行为识别模型 API Key 还未配置，当前上传图片后会保存文件并创建识别任务。
