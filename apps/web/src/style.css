@@ -301,7 +301,7 @@ h2 {
 
 .rank-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) 52px;
+  grid-template-columns: 92px minmax(0, 1fr) 36px;
   align-items: center;
   gap: 8px;
   color: var(--text-muted);
@@ -315,9 +315,12 @@ h2 {
 }
 
 .rank-row strong {
-  color: var(--text-strong);
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.1);
+  color: var(--green-dark);
   font-size: 12px;
   text-align: right;
+  padding: 2px 8px;
 }
 
 .table-panel {
@@ -600,6 +603,17 @@ h2 {
 
 .el-table .cell {
   line-height: 1.55;
+}
+
+.medal-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #fff7e6;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .el-progress-bar__outer {

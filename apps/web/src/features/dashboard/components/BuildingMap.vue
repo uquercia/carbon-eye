@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import type { BuildingRecord } from '../data/campusData'
-import { formatCompact } from '../utils/format'
+import { formatNumber } from '../utils/format'
 
-// 这个组件只负责中间“楼栋关系图”这块区域。
-// 父组件会把所有楼栋数据通过 props 传进来。
-defineProps<{
+const props = defineProps<{
   buildings: BuildingRecord[]
 }>()
 
-// 根据楼栋用电量决定圆点大小。
-// 用电越高，圆越大；同时限制最小和最大尺寸，避免太小或太夸张。
-const getMarkerSize = (value: number) => {
-  const size = 28 + Math.sqrt(value) / 32
-  return `${Math.min(Math.max(size, 30), 58)}px`
+const maxElectricity = () =>
+  Math.max(...props.buildings.map((building) => building.electricityActual), 1)
+
+const getBubbleSize = (value: number) => {
+  const ratio = value / maxElectricity()
+  const size = 30 + Math.sqrt(ratio) * 46
+  return `${Math.round(size)}px`
+}
+
+const getBubbleClass = (value: number) => {
+  const ratio = value / maxElectricity()
+  if (ratio >= 0.72) return 'bubble-high'
+  if (ratio >= 0.32) return 'bubble-medium'
+  return 'bubble-low'
 }
 </script>
 
 <template>
-  <!-- 外层 panel 复用了全局面板样式，内部再补地图专属内容 -->
   <section class="panel campus-map-panel">
     <div class="panel-header">
       <div>
@@ -27,10 +33,7 @@ const getMarkerSize = (value: number) => {
       <span class="map-status">15 栋建筑</span>
     </div>
 
-    <!-- 这块不是精确地图，而是“示意图”：
-         用 x / y 百分比坐标把楼栋按钮摆在容器里的某个位置 -->
-    <div class="campus-map" aria-label="上海电机学院临港校区楼栋能耗示意图">
-      <!-- 这几条 route 是背景参考线，用来增强“校区道路/关系图”的视觉感觉 -->
+    <div class="campus-map" aria-label="上海电机学院临港校区楼栋能耗气泡图">
       <div class="route route-a" />
       <div class="route route-b" />
       <div class="route route-c" />
@@ -38,25 +41,34 @@ const getMarkerSize = (value: number) => {
         v-for="building in buildings"
         :key="building.id"
         class="building-node"
+        :class="getBubbleClass(building.electricityActual)"
         :style="{
           left: `${building.x}%`,
           top: `${building.y}%`,
-          width: getMarkerSize(building.electricityActual),
-          height: getMarkerSize(building.electricityActual),
+          width: getBubbleSize(building.electricityActual),
+          height: getBubbleSize(building.electricityActual),
         }"
         type="button"
       >
-        <!-- 楼栋名和数值都来自 buildingRecords 数据文件 -->
         <span class="node-name">{{ building.name }}</span>
-        <span class="node-value">{{ formatCompact(building.electricityActual) }}</span>
+        <span class="node-level">强度气泡</span>
+        <span class="node-tooltip">
+          <strong>{{ building.name }}</strong>
+          <i>区域：{{ building.zone }}</i>
+          <i>专业映射：{{ building.major }}</i>
+          <i>用电：{{ formatNumber(building.electricityActual) }} kWh</i>
+          <i>预测用电：{{ formatNumber(building.electricityPredicted) }} kWh</i>
+          <i>用水：{{ formatNumber(building.waterActual) }} m³</i>
+          <i>预测用水：{{ formatNumber(building.waterPredicted) }} m³</i>
+        </span>
       </button>
     </div>
 
-    <!-- 底部图例：解释颜色点代表的专业/区域分类 -->
     <div class="legend-row">
-      <span><i class="legend-dot science" />理工科</span>
-      <span><i class="legend-dot medical" />医学/生物</span>
-      <span><i class="legend-dot life" />公共/生活区</span>
+      <span><i class="legend-dot science" />低强度</span>
+      <span><i class="legend-dot medical" />中强度</span>
+      <span><i class="legend-dot life" />高强度</span>
+      <span class="legend-note">数值默认隐藏，悬停气泡查看详细指标</span>
     </div>
   </section>
 </template>
@@ -133,11 +145,10 @@ const getMarkerSize = (value: number) => {
   place-items: center;
   gap: 1px;
   transform: translate(-50%, -50%);
-  border: 1px solid rgba(20, 83, 45, 0.24);
+  border: 2px solid rgba(20, 83, 45, 0.18);
   border-radius: 50%;
-  background: #ffffff;
   color: var(--text-strong);
-  box-shadow: 0 8px 20px rgba(21, 70, 52, 0.12);
+  box-shadow: 0 10px 24px rgba(21, 70, 52, 0.15);
   cursor: pointer;
   transition:
     transform 0.18s ease,
@@ -146,26 +157,72 @@ const getMarkerSize = (value: number) => {
 }
 
 .building-node:hover {
-  z-index: 2;
+  z-index: 4;
   transform: translate(-50%, -50%) scale(1.08);
   border-color: var(--green);
-  box-shadow: 0 12px 26px rgba(21, 70, 52, 0.18);
+  box-shadow: 0 16px 32px rgba(21, 70, 52, 0.2);
+}
+
+.bubble-low {
+  background: rgba(47, 128, 237, 0.12);
+}
+
+.bubble-medium {
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.bubble-high {
+  background: rgba(31, 157, 85, 0.2);
 }
 
 .node-name {
-  max-width: 72px;
+  max-width: 82px;
   overflow: hidden;
   color: var(--text-strong);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.node-value {
+.node-level {
   color: var(--text-muted);
   font-size: 10px;
   line-height: 1;
+}
+
+.node-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 5;
+  display: none;
+  min-width: 190px;
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(22, 59, 43, 0.16);
+  text-align: left;
+}
+
+.building-node:hover .node-tooltip {
+  display: grid;
+  gap: 4px;
+}
+
+.node-tooltip strong {
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.node-tooltip i {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: normal;
+  white-space: nowrap;
 }
 
 .legend-row {
@@ -190,14 +247,18 @@ const getMarkerSize = (value: number) => {
 }
 
 .science {
-  background: var(--green);
-}
-
-.medical {
   background: var(--blue);
 }
 
-.life {
+.medical {
   background: var(--amber);
+}
+
+.life {
+  background: var(--green);
+}
+
+.legend-note {
+  margin-left: auto;
 }
 </style>

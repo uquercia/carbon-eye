@@ -180,6 +180,8 @@ const topBuildings = computed(() =>
     .slice(0, 5),
 )
 
+const medalByIndex = ['🥇', '🥈', '🥉']
+
 const tableData = computed(() =>
   // 表格需要额外展示误差百分比，所以在原始楼栋数据上临时补两个字段。
   buildingRecords.value.map((item) => {
@@ -196,8 +198,9 @@ const tableData = computed(() =>
       electricityPercent,
       waterPercent,
       deviationLevel: deviation >= 60 ? '高' : deviation >= 25 ? '中' : '低',
+      combinedRankScore: electricityPercent * 0.55 + waterPercent * 0.45,
     }
-  }),
+  }).sort((left, right) => right.combinedRankScore - left.combinedRankScore),
 )
 
 const electricityChartOption = computed<ChartOption>(() => ({
@@ -417,7 +420,7 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
               :show-text="false"
               :stroke-width="7"
             />
-            <strong>{{ formatCompact(building.electricityActual) }}</strong>
+            <strong>高</strong>
           </div>
         </div>
       </aside>
@@ -457,6 +460,11 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
         </div>
 
         <ElTable :data="tableData" height="100%" size="small" class="energy-table">
+          <ElTableColumn label="排名" width="68" align="center">
+            <template #default="{ $index }">
+              <span class="medal-badge">{{ medalByIndex[$index] ?? $index + 1 }}</span>
+            </template>
+          </ElTableColumn>
           <ElTableColumn prop="name" label="楼栋" min-width="140" fixed />
           <ElTableColumn prop="zone" label="区域" width="82" />
           <ElTableColumn prop="major" label="专业映射" width="98" />

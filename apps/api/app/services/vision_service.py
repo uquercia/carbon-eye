@@ -2,7 +2,7 @@ import base64
 import json
 from pathlib import Path
 
-from openai import OpenAI
+import httpx
 
 from apps.api.app.core.config import get_settings
 
@@ -27,7 +27,7 @@ SYSTEM_PROMPT = """
 
 
 def _image_to_data_url(image_path: Path) -> str:
-    """把本地图片转成 data URL，方便传给支持 OpenAI 兼容格式的视觉模型。"""
+    """把本地图片转成 data URL，便于直接传给火山方舟 Responses API。"""
 
     suffix = image_path.suffix.lower()
     mime = "image/png" if suffix == ".png" else "image/webp" if suffix == ".webp" else "image/jpeg"
@@ -35,33 +35,62 @@ def _image_to_data_url(image_path: Path) -> str:
     return f"data:{mime};base64,{encoded}"
 
 
-def analyze_image_with_vision_model(image_path: Path) -> list[dict]:
-    """调用视觉大模型分析图片。
+def _extract_response_text(response_data: dict) -> str:
+    """从火山方舟 Responses API 返回体中提取文本。
 
-    当前按 OpenAI 兼容接口封装。
-    豆包火山方舟、阿里百炼等平台都提供类似的 OpenAI 兼容调用方式，
-    所以这里把 base_url、api_key、model 都放到 .env 里配置。
+    不同模型/版本返回结构可能略有差异，所以这里做得宽松一点：
+    优先读 output_text；如果没有，再从 output/content 里找文本。
+    """
+
+    if response_data.get("output_text"):
+      return str(response_data["output_text"])
+
+    chunks: list[str] = []
+    for output_item in response_data.get("output", []):
+        for content_item in output_item.get("content", []):
+            text = content_item.get("text")
+            if text:
+                chunks.append(str(text))
+    return "\n".join(chunks)
+
+
+def analyze_image_with_vision_model(image_path: Path) -> list[dict]:
+    """调用豆包/火山方舟 Responses API 分析图片。
+
+    本项目按你给的 curl 示例接入：
+    POST https://ark.cn-beijing.volces.com/api/v3/responses
+    content 类型使用 input_image + input_text。
     """
 
     settings = get_settings()
     if not settings.vision_api_key or not settings.vision_model:
         return []
 
-    client = OpenAI(api_key=settings.vision_api_key, base_url=settings.vision_base_url)
-    completion = client.chat.completions.create(
-        model=settings.vision_model,
-        messages=[
+    endpoint = f"{settings.vision_base_url.rstrip('/')}/responses"
+    payload = {
+        "model": settings.vision_model,
+        "input": [
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": SYSTEM_PROMPT},
-                    {"type": "image_url", "image_url": {"url": _image_to_data_url(image_path)}},
+                    {"type": "input_image", "image_url": _image_to_data_url(image_path)},
+                    {"type": "input_text", "text": SYSTEM_PROMPT},
                 ],
             }
         ],
-        response_format={"type": "json_object"},
-    )
+    }
 
-    text = completion.choices[0].message.content or '{"results":[]}'
+    with httpx.Client(timeout=60) as client:
+        response = client.post(
+            endpoint,
+            headers={
+                "Authorization": f"Bearer {settings.vision_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+
+    text = _extract_response_text(response.json()) or '{"results":[]}'
     data = json.loads(text)
     return data.get("results", [])
