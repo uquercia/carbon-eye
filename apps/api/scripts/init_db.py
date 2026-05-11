@@ -23,17 +23,19 @@ from apps.api.app.models import (
     UploadedImage,
 )
 
-SOURCE_DIR = Path("G:/大创碳眸项目")
 STATIC_DIR = ROOT / "apps" / "web" / "public" / "training"
-
-MYSQL_HOST = "127.0.0.1"
-MYSQL_PORT = 3306
-MYSQL_USER = "root"
-DATABASE_NAME = "carbon_eye"
 
 ENV_FILE = ROOT / "apps" / "api" / ".env"
 ENV_VALUES = dotenv_values(ENV_FILE)
-MYSQL_PASSWORD = ENV_VALUES.get("MYSQL_ROOT_PASSWORD") or "123456"
+MYSQL_HOST = ENV_VALUES.get("MYSQL_HOST") or "127.0.0.1"
+MYSQL_PORT = int(ENV_VALUES.get("MYSQL_PORT") or 3306)
+MYSQL_USER = ENV_VALUES.get("MYSQL_USER") or "root"
+MYSQL_PASSWORD = ENV_VALUES.get("MYSQL_ROOT_PASSWORD")
+DATABASE_NAME = ENV_VALUES.get("DATABASE_NAME") or "carbon_eye"
+SOURCE_DIR = Path(ENV_VALUES.get("SOURCE_DATA_DIR") or "G:/大创碳眸项目")
+
+if not MYSQL_PASSWORD:
+    raise RuntimeError("请先在 apps/api/.env 中配置 MYSQL_ROOT_PASSWORD")
 
 BUILDING_META = {
     "(温室)园艺系": ("北区", "理工科", 24, 18),

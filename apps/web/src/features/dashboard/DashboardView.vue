@@ -32,7 +32,7 @@ import type {
   TrainingImage,
   TrendPoint,
 } from './data/campusData'
-import { formatCompact, formatNumber } from './utils/format'
+import { formatCompact } from './utils/format'
 import type { ChartOption } from './types/echarts'
 
 const loadingText = ref('正在连接后端 API')
@@ -182,11 +182,22 @@ const topBuildings = computed(() =>
 
 const tableData = computed(() =>
   // 表格需要额外展示误差百分比，所以在原始楼栋数据上临时补两个字段。
-  buildingRecords.value.map((item) => ({
-    ...item,
-    electricityGapRate: `${Math.round((item.electricityError / item.electricityActual) * 100)}%`,
-    waterGapRate: `${Math.round((item.waterError / item.waterActual) * 100)}%`,
-  })),
+  buildingRecords.value.map((item) => {
+    const maxElectricity = Math.max(...buildingRecords.value.map((building) => building.electricityActual), 1)
+    const maxWater = Math.max(...buildingRecords.value.map((building) => building.waterActual), 1)
+    const electricityPercent = Math.round((item.electricityActual / maxElectricity) * 100)
+    const waterPercent = Math.round((item.waterActual / maxWater) * 100)
+    const deviation = Math.round(
+      ((item.electricityError + item.waterError) / (item.electricityActual + item.waterActual)) * 100,
+    )
+
+    return {
+      ...item,
+      electricityPercent,
+      waterPercent,
+      deviationLevel: deviation >= 60 ? '高' : deviation >= 25 ? '中' : '低',
+    }
+  }),
 )
 
 const electricityChartOption = computed<ChartOption>(() => ({
@@ -272,6 +283,39 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       barWidth: 28,
       data: behaviorScores.value.map((item) => item.score),
       itemStyle: { borderRadius: [5, 5, 0, 0] },
+    },
+  ],
+}))
+
+const behaviorImpactPieOption = computed<ChartOption>(() => ({
+  color: ['#1f9d55', '#2f80ed', '#f59e0b', '#0ea5a7', '#d94841', '#7c3aed', '#64748b'],
+  tooltip: {
+    trigger: 'item',
+    formatter: '{b}<br/>影响占比：{d}%',
+  },
+  legend: {
+    orient: 'vertical',
+    right: 8,
+    top: 'center',
+    textStyle: { color: '#41524b', fontSize: 12 },
+  },
+  series: [
+    {
+      name: '低碳行为影响占比',
+      type: 'pie',
+      radius: ['42%', '68%'],
+      center: ['38%', '50%'],
+      avoidLabelOverlap: true,
+      label: {
+        formatter: '{b}\n{d}%',
+      },
+      data: behaviorImpacts.value.map((item) => ({
+        name: item.behaviorName,
+        value: Math.max(
+          1,
+          Math.round((Math.abs(item.electricityFactor) + Math.abs(item.waterFactor)) * 100),
+        ),
+      })),
     },
   ],
 }))
@@ -406,28 +450,35 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       <aside class="panel table-panel">
         <div class="panel-header">
           <div>
-            <p class="eyebrow">楼栋水电数据</p>
-            <h2>预测结果表</h2>
+          <p class="eyebrow">楼栋水电数据</p>
+          <h2>可视化预测概览</h2>
           </div>
           <span class="table-count">{{ tableData.length }} 条</span>
         </div>
 
         <ElTable :data="tableData" height="100%" size="small" class="energy-table">
-          <ElTableColumn prop="name" label="楼栋" min-width="128" fixed />
+          <ElTableColumn prop="name" label="楼栋" min-width="140" fixed />
           <ElTableColumn prop="zone" label="区域" width="82" />
           <ElTableColumn prop="major" label="专业映射" width="98" />
-          <ElTableColumn label="用电" width="112" align="right">
-            <template #default="{ row }">{{ formatNumber(row.electricityActual) }}</template>
+          <ElTableColumn label="用电水平" min-width="150">
+            <template #default="{ row }">
+              <ElProgress :percentage="row.electricityPercent" :stroke-width="8" :show-text="false" />
+            </template>
           </ElTableColumn>
-          <ElTableColumn label="预测用电" width="112" align="right">
-            <template #default="{ row }">{{ formatNumber(row.electricityPredicted) }}</template>
+          <ElTableColumn label="用水水平" min-width="150">
+            <template #default="{ row }">
+              <ElProgress :percentage="row.waterPercent" :stroke-width="8" :show-text="false" status="success" />
+            </template>
           </ElTableColumn>
-          <ElTableColumn prop="electricityGapRate" label="电误差" width="84" align="right" />
-          <ElTableColumn label="用水" width="112" align="right">
-            <template #default="{ row }">{{ formatNumber(row.waterActual) }}</template>
-          </ElTableColumn>
-          <ElTableColumn label="预测用水" width="112" align="right">
-            <template #default="{ row }">{{ formatNumber(row.waterPredicted) }}</template>
+          <ElTableColumn label="偏差等级" width="96" align="center">
+            <template #default="{ row }">
+              <ElTag
+                size="small"
+                :type="row.deviationLevel === '高' ? 'danger' : row.deviationLevel === '中' ? 'warning' : 'success'"
+              >
+                {{ row.deviationLevel }}
+              </ElTag>
+            </template>
           </ElTableColumn>
         </ElTable>
       </aside>
@@ -441,23 +492,33 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         </div>
       </div>
 
-      <div class="behavior-upload-empty">
-        <img
-          v-if="uploadedImage"
-          class="uploaded-preview"
-          :src="uploadedImage.image.public_url"
-          :alt="uploadedImage.image.original_filename"
-        />
-        <FileImage v-else :size="26" />
-        <div>
-          <strong>{{ uploadedImage ? uploadedImage.image.original_filename : '上传校园图片后生成行为影响分析' }}</strong>
-          <span>
-            {{
-              uploadedImage
-                ? uploadedImage.message
-                : '当前先不展示识别结论。图片上传并完成模型分析后，这里会列出行为 1、行为 2、位置、置信度，以及对用电/用水的影响。'
-            }}
-          </span>
+      <div class="behavior-insight-layout">
+        <div class="behavior-upload-empty">
+          <img
+            v-if="uploadedImage"
+            class="uploaded-preview"
+            :src="uploadedImage.image.public_url"
+            :alt="uploadedImage.image.original_filename"
+          />
+          <FileImage v-else :size="26" />
+          <div>
+            <strong>{{ uploadedImage ? uploadedImage.image.original_filename : '上传校园图片后生成行为影响分析' }}</strong>
+            <span>
+              {{
+                uploadedImage
+                  ? uploadedImage.message
+                  : '当前先不展示识别结论。图片上传并完成模型分析后，这里会列出行为 1、行为 2、位置、置信度，以及对用电/用水的影响。'
+              }}
+            </span>
+          </div>
+        </div>
+
+        <div class="behavior-pie-card">
+          <div>
+            <p class="eyebrow">伪造展示数据</p>
+            <strong>低碳行为影响占比</strong>
+          </div>
+          <AppChart :option="behaviorImpactPieOption" />
         </div>
       </div>
 

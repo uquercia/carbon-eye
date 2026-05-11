@@ -109,7 +109,7 @@ export type UploadImageResponse = {
 // 后续如果后端部署到服务器，只需要把这里改成服务器 API 地址，
 // 或者改成从 .env 读取。
 const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000',
   timeout: 8000,
 })
 

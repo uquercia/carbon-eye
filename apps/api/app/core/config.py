@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     这样数据库密码不用写死在业务代码里，后续部署时也更好改。
     """
 
-    database_url: str = "mysql+pymysql://root:123456@127.0.0.1:3306/carbon_eye?charset=utf8mb4"
+    database_url: str = "mysql+pymysql://root:你的MySQL密码@127.0.0.1:3306/carbon_eye?charset=utf8mb4"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     storage_backend: str = "local"

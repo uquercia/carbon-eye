@@ -123,6 +123,13 @@ VISION_MODEL=qwen3.6-plus
 
 当前项目已经完成“可配置接入”，你拿到 API Key 和模型接入点后，只需要填 `.env` 并重启后端。
 
+当前本机状态：
+
+- API Key 已写入本地 `apps/api/.env`。
+- `apps/api/.env` 被 `.gitignore` 忽略，不会提交到 git。
+- 还缺视觉模型接入点 ID，需要在火山方舟控制台创建/开通图片理解模型接入点后填写 `VISION_MODEL`。
+- 你提供的“资源ID：apikey-...”是 API Key 资源 ID，不是模型接入点 ID，不能直接作为 `VISION_MODEL` 使用。
+
 ## 推荐落地路线
 
 ### 第一阶段：本地上传闭环

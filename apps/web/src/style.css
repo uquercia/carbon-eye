@@ -475,6 +475,38 @@ h2 {
   background: #fff;
 }
 
+.behavior-insight-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.behavior-insight-layout .behavior-upload-empty {
+  margin-top: 0;
+}
+
+.behavior-pie-card {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  min-height: 180px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.behavior-pie-card strong {
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.behavior-pie-card .app-chart {
+  min-height: 160px;
+  height: 180px;
+}
+
 .uploaded-preview {
   width: 92px;
   height: 68px;
@@ -598,6 +630,7 @@ h2 {
   }
 
   .training-content,
+  .behavior-insight-layout,
   .eco-tip-grid {
     grid-template-columns: 1fr;
   }
