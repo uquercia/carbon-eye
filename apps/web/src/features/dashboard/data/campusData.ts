@@ -32,6 +32,35 @@ export type TrendPoint = {
   waterPredicted: number
 }
 
+export type RecognitionSample = {
+  id: number
+  behaviorName: string
+  locationName: string
+  buildingId: string
+  confidence: number
+  impactLevel: string
+  impactSummary: string
+  electricityDeltaKwh: number
+  waterDeltaM3: number
+  imageUrl: string
+}
+
+export type BehaviorImpact = {
+  id: number
+  behaviorName: string
+  category: string
+  description: string
+  electricityFactor: number
+  waterFactor: number
+}
+
+export type TrainingImage = {
+  id: number
+  title: string
+  imageUrl: string
+  description: string
+}
+
 // 楼栋基础数据：
 // - 右侧表格会直接使用这些字段
 // - 中间地图会使用 name、electricityActual、x、y
@@ -302,5 +331,66 @@ export const trendData: TrendPoint[] = [
     electricityPredicted: 916780,
     waterActual: 875920,
     waterPredicted: 891400,
+  },
+]
+
+export const recognitionSamples: RecognitionSample[] = [
+  {
+    id: 1,
+    behaviorName: '随手关灯关空调',
+    locationName: '教学楼教室',
+    buildingId: 'building_05',
+    confidence: 0.93,
+    impactLevel: '正向',
+    impactSummary: '识别到离开教室后关闭电器，预计降低教学楼夜间空载用电。',
+    electricityDeltaKwh: -18.5,
+    waterDeltaM3: 0,
+    imageUrl: '/training/electricity_prediction.png',
+  },
+  {
+    id: 2,
+    behaviorName: '及时关闭水龙头',
+    locationName: '公共洗手区',
+    buildingId: 'building_10',
+    confidence: 0.89,
+    impactLevel: '正向',
+    impactSummary: '识别到用水后关闭水龙头，预计减少公共区域用水浪费。',
+    electricityDeltaKwh: 0,
+    waterDeltaM3: -6.8,
+    imageUrl: '/training/water_prediction.png',
+  },
+]
+
+export const behaviorImpacts: BehaviorImpact[] = [
+  {
+    id: 1,
+    behaviorName: '随手关灯关空调',
+    category: '用电',
+    description: '离开教室后关闭照明和空调，可直接降低空载用电。',
+    electricityFactor: -0.12,
+    waterFactor: 0,
+  },
+  {
+    id: 2,
+    behaviorName: '及时关闭水龙头',
+    category: '用水',
+    description: '洗手、清洁后关闭水龙头，可降低公共区域用水浪费。',
+    electricityFactor: 0,
+    waterFactor: -0.1,
+  },
+]
+
+export const trainingImages: TrainingImage[] = [
+  {
+    id: 1,
+    title: '用电预测训练结果',
+    imageUrl: '/training/electricity_prediction.png',
+    description: '展示模型对各楼栋用电量的实际/预测对比。',
+  },
+  {
+    id: 2,
+    title: '训练损失曲线',
+    imageUrl: '/training/training_loss.png',
+    description: '用于观察模型训练收敛情况。',
   },
 ]

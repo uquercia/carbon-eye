@@ -1,14 +1,11 @@
 <script setup lang="ts">
-// 这个页面是驾驶舱主页面：
-// 1. 从静态数据文件读取楼栋、行为分数、趋势数据
-// 2. 在这里做汇总和图表配置
-// 3. 再把结果传给 MetricTile、BuildingMap、AppChart 等子组件渲染
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   Activity,
   Building2,
   Database,
   FileImage,
+  Image,
   PlugZap,
   Upload,
   Waves,
@@ -17,21 +14,119 @@ import { ElProgress, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import AppChart from '../../shared/components/AppChart.vue'
 import BuildingMap from './components/BuildingMap.vue'
 import MetricTile from './components/MetricTile.vue'
-import { behaviorScores, buildingRecords, trendData } from './data/campusData'
+import { fetchDashboard } from './api/dashboardApi'
+import type { DashboardApiResponse } from './api/dashboardApi'
+import {
+  behaviorImpacts as fallbackBehaviorImpacts,
+  behaviorScores as fallbackBehaviorScores,
+  buildingRecords as fallbackBuildingRecords,
+  recognitionSamples as fallbackRecognitionSamples,
+  trainingImages as fallbackTrainingImages,
+  trendData as fallbackTrendData,
+} from './data/campusData'
+import type {
+  BehaviorImpact,
+  BehaviorScore,
+  BuildingRecord,
+  RecognitionSample,
+  TrainingImage,
+  TrendPoint,
+} from './data/campusData'
 import { formatCompact, formatNumber } from './utils/format'
 import type { ChartOption } from './types/echarts'
 
-// 总览数据：汇总楼栋的用电、用水、行为分数等数据
+const loadingText = ref('正在连接后端 API')
+const apiError = ref('')
+
+const buildingRecords = ref<BuildingRecord[]>(fallbackBuildingRecords)
+const behaviorScores = ref<BehaviorScore[]>(fallbackBehaviorScores)
+const trendData = ref<TrendPoint[]>(fallbackTrendData)
+const recognitionSamples = ref<RecognitionSample[]>(fallbackRecognitionSamples)
+const behaviorImpacts = ref<BehaviorImpact[]>(fallbackBehaviorImpacts)
+const trainingImages = ref<TrainingImage[]>(fallbackTrainingImages)
+
+// 把后端 snake_case 字段转换成前端更常用的 camelCase。
+function applyDashboardData(data: DashboardApiResponse) {
+  buildingRecords.value = data.buildings.map((item) => ({
+    id: item.id,
+    name: item.name,
+    zone: item.zone,
+    major: item.major,
+    electricityActual: item.electricity_actual,
+    electricityPredicted: item.electricity_predicted,
+    waterActual: item.water_actual,
+    waterPredicted: item.water_predicted,
+    electricityError: item.electricity_error,
+    waterError: item.water_error,
+    x: item.map_x,
+    y: item.map_y,
+  }))
+
+  behaviorScores.value = data.behavior_scores.map((item) => ({
+    major: item.major_name,
+    score: item.total_score,
+  }))
+
+  trendData.value = data.trends.map((item) => ({
+    step: String(item.time_step),
+    electricityActual: item.electricity_actual,
+    electricityPredicted: item.electricity_predicted,
+    waterActual: item.water_actual,
+    waterPredicted: item.water_predicted,
+  }))
+
+  recognitionSamples.value = data.recognition_samples.map((item) => ({
+    id: item.id,
+    behaviorName: item.behavior_name,
+    locationName: item.location_name,
+    buildingId: item.building_id,
+    confidence: item.confidence,
+    impactLevel: item.impact_level,
+    impactSummary: item.impact_summary,
+    electricityDeltaKwh: item.electricity_delta_kwh,
+    waterDeltaM3: item.water_delta_m3,
+    imageUrl: item.image_url,
+  }))
+
+  behaviorImpacts.value = data.behavior_impacts.map((item) => ({
+    id: item.id,
+    behaviorName: item.behavior_name,
+    category: item.category,
+    description: item.description,
+    electricityFactor: item.electricity_factor,
+    waterFactor: item.water_factor,
+  }))
+
+  trainingImages.value = data.training_images.map((item) => ({
+    id: item.id,
+    title: item.title,
+    imageUrl: item.image_url,
+    description: item.description,
+  }))
+}
+
+onMounted(async () => {
+  try {
+    const data = await fetchDashboard()
+    applyDashboardData(data)
+    loadingText.value = 'API 数据已加载'
+  } catch (error) {
+    apiError.value = '后端 API 未连接，当前使用前端兜底数据'
+    loadingText.value = '使用本地示例数据'
+    console.error(error)
+  }
+})
+
 const totals = computed(() => {
-  const electricityActual = buildingRecords.reduce((sum, item) => sum + item.electricityActual, 0)
-  const electricityPredicted = buildingRecords.reduce(
+  const electricityActual = buildingRecords.value.reduce((sum, item) => sum + item.electricityActual, 0)
+  const electricityPredicted = buildingRecords.value.reduce(
     (sum, item) => sum + item.electricityPredicted,
     0,
   )
-  const waterActual = buildingRecords.reduce((sum, item) => sum + item.waterActual, 0)
-  const waterPredicted = buildingRecords.reduce((sum, item) => sum + item.waterPredicted, 0)
+  const waterActual = buildingRecords.value.reduce((sum, item) => sum + item.waterActual, 0)
+  const waterPredicted = buildingRecords.value.reduce((sum, item) => sum + item.waterPredicted, 0)
   const avgBehavior =
-    behaviorScores.reduce((sum, item) => sum + item.score, 0) / behaviorScores.length
+    behaviorScores.value.reduce((sum, item) => sum + item.score, 0) / behaviorScores.value.length
 
   return {
     electricityActual,
@@ -42,38 +137,28 @@ const totals = computed(() => {
   }
 })
 
-// 取出用电量最高的前 5 栋楼，用在左侧排行区域
 const topBuildings = computed(() =>
-  [...buildingRecords]
+  [...buildingRecords.value]
     .sort((left, right) => right.electricityActual - left.electricityActual)
     .slice(0, 5),
 )
 
-// 表格展示用的数据：在原始楼栋数据基础上补充“误差百分比”字段
 const tableData = computed(() =>
-  buildingRecords.map((item) => ({
+  buildingRecords.value.map((item) => ({
     ...item,
     electricityGapRate: `${Math.round((item.electricityError / item.electricityActual) * 100)}%`,
     waterGapRate: `${Math.round((item.waterError / item.waterActual) * 100)}%`,
   })),
 )
 
-// ECharts 的配置对象。AppChart 组件只负责“把图画出来”，
-// 真正画什么图、用哪些数据，都在这里定义。
 const electricityChartOption = computed<ChartOption>(() => ({
   color: ['#1f9d55', '#2f80ed'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
-  xAxis: {
-    type: 'category',
-    data: trendData.map((item) => item.step),
-    axisTick: { show: false },
-  },
+  xAxis: { type: 'category', data: trendData.value.map((item) => item.step), axisTick: { show: false } },
   yAxis: {
     type: 'value',
-    axisLabel: {
-      formatter: (value: number) => formatCompact(value),
-    },
+    axisLabel: { formatter: (value: number) => formatCompact(value) },
     splitLine: { lineStyle: { color: '#e8eee9' } },
   },
   series: [
@@ -82,7 +167,7 @@ const electricityChartOption = computed<ChartOption>(() => ({
       type: 'line',
       smooth: true,
       symbolSize: 7,
-      data: trendData.map((item) => item.electricityActual),
+      data: trendData.value.map((item) => item.electricityActual),
     },
     {
       name: '预测用电',
@@ -90,26 +175,19 @@ const electricityChartOption = computed<ChartOption>(() => ({
       smooth: true,
       symbolSize: 7,
       lineStyle: { type: 'dashed' },
-      data: trendData.map((item) => item.electricityPredicted),
+      data: trendData.value.map((item) => item.electricityPredicted),
     },
   ],
 }))
 
-// 用水图：实际值用柱状图，预测值用折线图，方便在一个图里对比
 const waterChartOption = computed<ChartOption>(() => ({
   color: ['#0ea5a7', '#f59e0b'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
-  xAxis: {
-    type: 'category',
-    data: trendData.map((item) => item.step),
-    axisTick: { show: false },
-  },
+  xAxis: { type: 'category', data: trendData.value.map((item) => item.step), axisTick: { show: false } },
   yAxis: {
     type: 'value',
-    axisLabel: {
-      formatter: (value: number) => formatCompact(value),
-    },
+    axisLabel: { formatter: (value: number) => formatCompact(value) },
     splitLine: { lineStyle: { color: '#e8eee9' } },
   },
   series: [
@@ -117,26 +195,25 @@ const waterChartOption = computed<ChartOption>(() => ({
       name: '实际用水',
       type: 'bar',
       barWidth: 16,
-      data: trendData.map((item) => item.waterActual),
+      data: trendData.value.map((item) => item.waterActual),
     },
     {
       name: '预测用水',
       type: 'line',
       smooth: true,
       symbolSize: 7,
-      data: trendData.map((item) => item.waterPredicted),
+      data: trendData.value.map((item) => item.waterPredicted),
     },
   ],
 }))
 
-// 行为得分图：展示不同专业的低碳行为得分
 const behaviorChartOption = computed<ChartOption>(() => ({
   color: ['#1f9d55'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 16, bottom: 34, left: 42 },
   xAxis: {
     type: 'category',
-    data: behaviorScores.map((item) => item.major),
+    data: behaviorScores.value.map((item) => item.major),
     axisTick: { show: false },
     axisLabel: { interval: 0 },
   },
@@ -151,19 +228,15 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       name: '低碳行为得分',
       type: 'bar',
       barWidth: 28,
-      data: behaviorScores.map((item) => item.score),
-      itemStyle: {
-        borderRadius: [5, 5, 0, 0],
-      },
+      data: behaviorScores.value.map((item) => item.score),
+      itemStyle: { borderRadius: [5, 5, 0, 0] },
     },
   ],
 }))
 </script>
 
 <template>
-  <!-- 页面最外层容器，整体布局由全局样式里的 .dashboard-shell 控制 -->
   <main class="dashboard-shell">
-    <!-- 顶部标题栏：项目名 + 系统状态 -->
     <header class="topbar">
       <div class="brand-block">
         <div class="brand-mark">碳眸</div>
@@ -173,13 +246,11 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         </div>
       </div>
       <div class="topbar-actions">
-        <span class="connection-pill"><Database :size="15" /> MySQL 本地连接已预检</span>
-        <span class="connection-pill muted">识别模型待接入</span>
+        <span class="connection-pill"><Database :size="15" /> {{ loadingText }}</span>
+        <span v-if="apiError" class="connection-pill muted">{{ apiError }}</span>
       </div>
     </header>
 
-    <!-- 顶部 4 个指标卡片。这里重复使用 MetricTile 组件，
-          每张卡片只传不同的 label / value / meta / tone -->
     <section class="metrics-grid">
       <MetricTile
         label="实际用电总量"
@@ -194,15 +265,19 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         tone="blue"
       />
       <MetricTile
-        label="低碳行为均分"
-        :value="totals.avgBehavior.toFixed(2)"
-        meta="来自 6 类专业问卷聚合"
+        label="识别行为样例"
+        :value="String(recognitionSamples.length)"
+        meta="来自数据库 recognition_samples"
         tone="amber"
       />
-      <MetricTile label="覆盖楼栋" value="15" meta="按现有预测结果统计" tone="red" />
+      <MetricTile
+        label="覆盖楼栋"
+        :value="String(buildingRecords.length)"
+        meta="按数据库预测结果统计"
+        tone="red"
+      />
     </section>
 
-    <!-- 中间主工作区：左侧任务区 / 中间楼栋图 / 右侧表格 -->
     <section class="workspace-grid">
       <aside class="panel recognition-panel">
         <div class="panel-header">
@@ -213,34 +288,31 @@ const behaviorChartOption = computed<ChartOption>(() => ({
           <FileImage :size="22" />
         </div>
 
-        <!-- 这里目前只是上传入口的展示 UI，还没有真正接后端上传接口 -->
         <div class="upload-box">
           <Upload :size="28" />
           <strong>上传校园图片</strong>
-          <span>当前先展示页面入口，行为和位置识别接口后续接入。</span>
+          <span>这里预留图片上传入口，后续接入模型后把识别结果写入数据库。</span>
         </div>
 
-        <!-- 左侧任务列表：也是静态展示，表示未来的功能模块 -->
         <div class="task-list">
           <div class="task-item active">
             <Activity :size="18" />
             <div>
               <strong>低碳行为识别</strong>
-              <span>等待模型服务</span>
+              <span>当前展示训练后样例数据</span>
             </div>
-            <ElTag size="small" type="info">预留</ElTag>
+            <ElTag size="small" type="success">样例</ElTag>
           </div>
           <div class="task-item">
             <Building2 :size="18" />
             <div>
               <strong>楼栋归属判断</strong>
-              <span>先由数据表选择楼栋</span>
+              <span>当前按样例数据关联楼栋</span>
             </div>
-            <ElTag size="small" type="warning">暂缓</ElTag>
+            <ElTag size="small" type="warning">预留</ElTag>
           </div>
         </div>
 
-        <!-- 左下角排行：来自上面 topBuildings 计算结果 -->
         <div class="ranking-block">
           <div class="section-title">高用电楼栋</div>
           <div v-for="building in topBuildings" :key="building.id" class="rank-row">
@@ -255,10 +327,40 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         </div>
       </aside>
 
-      <!-- 中间楼栋关系图：把楼栋数组整体传给 BuildingMap 组件 -->
-      <BuildingMap :buildings="buildingRecords" />
+      <div class="center-column">
+        <BuildingMap :buildings="buildingRecords" />
 
-      <!-- 右侧表格：使用 Element Plus 的表格组件 -->
+        <section class="panel training-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">训练结果与影响分析</p>
+              <h2><Image :size="18" /> 校园图片识别预留区</h2>
+            </div>
+            <ElTag size="small" type="success">红框 1</ElTag>
+          </div>
+
+          <div class="training-content">
+            <div class="upload-inline">
+              <Upload :size="22" />
+              <div>
+                <strong>上传校园图片后显示识别结果</strong>
+                <span>后续模型会输出行为、地点、置信度，并评估对用电/用水的影响。</span>
+              </div>
+            </div>
+
+            <div class="training-gallery">
+              <article v-for="imageItem in trainingImages" :key="imageItem.id" class="training-card">
+                <img :src="imageItem.imageUrl" :alt="imageItem.title" />
+                <div>
+                  <strong>{{ imageItem.title }}</strong>
+                  <span>{{ imageItem.description }}</span>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <aside class="panel table-panel">
         <div class="panel-header">
           <div>
@@ -289,8 +391,37 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       </aside>
     </section>
 
-     <!-- 底部图表区：3 个图表都通过 AppChart 组件渲染，
-          只是传入不同的 option 配置对象 -->
+    <section class="panel behavior-list-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">识别行为清单</p>
+          <h2>行为 1 / 行为 2 / 行为影响</h2>
+        </div>
+        <ElTag size="small">红框 2</ElTag>
+      </div>
+
+      <div class="behavior-list-grid">
+        <article v-for="(sample, index) in recognitionSamples" :key="sample.id" class="behavior-sample-card">
+          <div class="behavior-index">行为 {{ index + 1 }}</div>
+          <strong>{{ sample.behaviorName }}</strong>
+          <span>{{ sample.locationName }} · 置信度 {{ Math.round(sample.confidence * 100) }}%</span>
+          <p>{{ sample.impactSummary }}</p>
+          <div class="impact-row">
+            <span>用电 {{ sample.electricityDeltaKwh }} kWh</span>
+            <span>用水 {{ sample.waterDeltaM3 }} m³</span>
+          </div>
+        </article>
+
+        <article v-for="impact in behaviorImpacts" :key="`impact-${impact.id}`" class="impact-rule-card">
+          <ElTag size="small" :type="impact.category === '用电' ? 'success' : 'info'">
+            {{ impact.category }}
+          </ElTag>
+          <strong>{{ impact.behaviorName }}</strong>
+          <span>{{ impact.description }}</span>
+        </article>
+      </div>
+    </section>
+
     <section class="charts-grid">
       <article class="panel chart-panel">
         <div class="panel-header">

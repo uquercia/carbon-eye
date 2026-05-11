@@ -164,6 +164,12 @@ h2 {
   align-items: stretch;
 }
 
+.center-column {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
 /* 底部图表区：3 个图表横向排列 */
 .charts-grid {
   display: grid;
@@ -324,6 +330,143 @@ h2 {
   min-width: 360px;
 }
 
+.training-panel {
+  min-height: 210px;
+}
+
+.training-content {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.upload-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 136px;
+  padding: 14px;
+  border: 1px dashed rgba(21, 115, 71, 0.34);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.upload-inline svg {
+  flex: 0 0 auto;
+  color: var(--green-dark);
+}
+
+.upload-inline strong,
+.upload-inline span,
+.training-card strong,
+.training-card span {
+  display: block;
+}
+
+.upload-inline strong,
+.training-card strong,
+.behavior-sample-card strong,
+.impact-rule-card strong {
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.upload-inline span,
+.training-card span,
+.behavior-sample-card span,
+.impact-rule-card span {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.training-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.training-card {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.training-card img {
+  display: block;
+  width: 100%;
+  height: 82px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.training-card div {
+  padding: 10px;
+}
+
+.behavior-list-panel {
+  min-height: 190px;
+}
+
+.behavior-list-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.behavior-sample-card,
+.impact-rule-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.behavior-index {
+  width: fit-content;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.1);
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
+.behavior-sample-card p {
+  margin-top: 8px;
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.impact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.impact-row span {
+  margin: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-strong);
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.impact-rule-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
 /* Element Plus 组件的局部主题覆盖，让它们更贴合页面配色 */
 .el-table {
   --el-table-header-bg-color: #f7faf8;
@@ -358,6 +501,11 @@ h2 {
   .metrics-grid,
   .charts-grid,
   .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .training-content,
+  .behavior-list-grid {
     grid-template-columns: 1fr;
   }
 
