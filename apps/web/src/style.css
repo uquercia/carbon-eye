@@ -206,13 +206,32 @@ h2 {
 .upload-box {
   display: grid;
   place-items: center;
+  width: 100%;
   min-height: 168px;
   padding: 18px;
   border: 1px dashed rgba(21, 115, 71, 0.34);
   border-radius: 8px;
   background: var(--surface-soft);
   color: var(--text-muted);
+  cursor: pointer;
   text-align: center;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.upload-box:hover {
+  border-color: rgba(21, 115, 71, 0.58);
+  background: #fff;
+  box-shadow: 0 12px 26px rgba(22, 59, 43, 0.08);
+  transform: translateY(-1px);
+}
+
+.upload-box:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .hidden-file-input {
@@ -227,12 +246,6 @@ h2 {
   background: transparent;
   color: var(--green-dark);
   cursor: pointer;
-}
-
-.upload-action-button:disabled,
-.upload-inline-button:disabled {
-  cursor: wait;
-  opacity: 0.55;
 }
 
 .upload-box svg {
