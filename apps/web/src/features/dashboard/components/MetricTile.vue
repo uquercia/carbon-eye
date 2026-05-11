@@ -20,13 +20,37 @@ defineProps<{
 
 <style scoped>
 .metric-tile {
+  position: relative;
   display: grid;
   gap: 6px;
   min-width: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 250, 0.96)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.metric-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--tile-color);
+}
+
+.metric-tile::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 34px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tile-color) 18%, transparent);
 }
 
 .metric-label,
@@ -38,24 +62,24 @@ defineProps<{
 
 strong {
   color: var(--text-strong);
-  font-size: 24px;
+  font-size: 25px;
   line-height: 1.1;
   letter-spacing: 0;
 }
 
 .green {
-  box-shadow: inset 3px 0 0 var(--green);
+  --tile-color: var(--green);
 }
 
 .blue {
-  box-shadow: inset 3px 0 0 var(--blue);
+  --tile-color: var(--blue);
 }
 
 .amber {
-  box-shadow: inset 3px 0 0 var(--amber);
+  --tile-color: var(--amber);
 }
 
 .red {
-  box-shadow: inset 3px 0 0 var(--red);
+  --tile-color: var(--red);
 }
 </style>

@@ -14,6 +14,7 @@
   --amber: #f59e0b;
   --red: #d94841;
   --shadow: 0 14px 38px rgba(22, 59, 43, 0.08);
+  --shadow-soft: 0 8px 22px rgba(22, 59, 43, 0.05);
   font-family:
     Inter, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, -apple-system, sans-serif;
   color: var(--text-body);
@@ -74,9 +75,9 @@ h2 {
 
 .dashboard-shell {
   display: grid;
-  gap: 22px;
+  gap: 24px;
   min-height: 100vh;
-  padding: 22px;
+  padding: 24px;
 }
 
 /* 顶部标题栏 */
@@ -85,7 +86,7 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 16px 18px;
+  padding: 18px 20px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -114,6 +115,7 @@ h2 {
   color: #fff;
   font-size: 19px;
   font-weight: 800;
+  box-shadow: 0 12px 24px rgba(21, 115, 71, 0.18);
 }
 
 .topbar-actions {
@@ -153,14 +155,14 @@ h2 {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 /* 中间主工作区：左侧任务栏 / 中间地图 / 右侧表格 */
 .workspace-grid {
   display: grid;
   grid-template-columns: 330px minmax(620px, 1fr) 560px;
-  gap: 18px;
+  gap: 20px;
   align-items: stretch;
 }
 
@@ -175,7 +177,7 @@ h2 {
 .charts-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(360px, 0.8fr);
-  gap: 18px;
+  gap: 20px;
 }
 
 /* 通用面板样式：很多区域都复用这个基础卡片外观 */
@@ -185,7 +187,7 @@ h2 {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  padding: 18px;
+  padding: 20px;
 }
 
 .panel-header {
@@ -207,8 +209,8 @@ h2 {
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 168px;
-  padding: 18px;
+  min-height: 176px;
+  padding: 20px;
   border: 1px dashed rgba(21, 115, 71, 0.34);
   border-radius: 8px;
   background: var(--surface-soft);
@@ -253,6 +255,15 @@ h2 {
   color: var(--green-dark);
 }
 
+.upload-action-button {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(31, 157, 85, 0.12);
+}
+
 .upload-box strong {
   display: block;
   margin-bottom: 4px;
@@ -276,13 +287,14 @@ h2 {
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 12px;
+  padding: 13px;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: #fff;
 }
 
 .task-item.active {
+  border-color: var(--border-subtle);
   background: rgba(31, 157, 85, 0.06);
 }
 
@@ -357,7 +369,7 @@ h2 {
 .energy-table {
   flex: 1;
   width: 100%;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .chart-panel {
@@ -425,7 +437,7 @@ h2 {
 .training-gallery {
   display: grid;
   grid-template-columns: minmax(360px, 1.25fr) repeat(3, minmax(180px, 0.75fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .training-card {
@@ -436,7 +448,7 @@ h2 {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 10px 26px rgba(22, 59, 43, 0.06);
+  box-shadow: var(--shadow-soft);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
@@ -444,7 +456,7 @@ h2 {
 
 .training-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(22, 59, 43, 0.1);
+  box-shadow: 0 18px 36px rgba(22, 59, 43, 0.12);
 }
 
 .training-card img {
@@ -460,7 +472,8 @@ h2 {
 
 .training-card.featured {
   min-height: 250px;
-  background: linear-gradient(180deg, #fff, #f7faf8);
+  border-color: var(--border-subtle);
+  background: linear-gradient(180deg, #fff, #f7fbf8);
 }
 
 .training-card.featured img {
@@ -511,7 +524,7 @@ h2 {
 .behavior-sample-card,
 .impact-rule-card {
   min-width: 0;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: var(--surface-soft);
@@ -523,7 +536,7 @@ h2 {
   gap: 14px;
   min-height: 96px;
   margin-top: 14px;
-  padding: 16px;
+  padding: 18px;
   border: 1px dashed rgba(21, 115, 71, 0.34);
   border-radius: 8px;
   background: #fff;
@@ -545,7 +558,7 @@ h2 {
   grid-template-columns: 150px minmax(0, 1fr);
   align-items: center;
   min-height: 180px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: #fff;
@@ -683,7 +696,7 @@ h2 {
 }
 
 /* 小屏幕下切成单列布局，避免横向挤压 */
-@media (max-width: 1280px) {
+@media (max-width: 1180px) {
   body {
     min-width: 0;
   }
