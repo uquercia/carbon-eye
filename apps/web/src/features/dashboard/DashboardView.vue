@@ -349,19 +349,19 @@ function formatImpactLevel(value: number, target: '用电' | '用水') {
       <MetricTile
         label="用电趋势指数"
         value="高活跃"
-        meta="按数据库结果脱敏展示"
+        meta="综合趋势评估"
         tone="green"
       />
       <MetricTile
         label="用水趋势指数"
         value="中高位"
-        meta="按数据库结果脱敏展示"
+        meta="综合趋势评估"
         tone="blue"
       />
       <MetricTile
         label="识别行为样例"
         :value="String(recognitionSamples.length)"
-        meta="训练样例脱敏统计"
+        meta="训练样例统计"
         tone="amber"
       />
       <MetricTile
@@ -449,7 +449,7 @@ function formatImpactLevel(value: number, target: '用电' | '用水') {
               <span class="medal-badge">{{ medalByIndex[$index] ?? $index + 1 }}</span>
             </template>
           </ElTableColumn>
-          <ElTableColumn prop="name" label="楼栋" min-width="140" fixed />
+          <ElTableColumn prop="name" label="楼栋" min-width="140" />
           <ElTableColumn prop="zone" label="区域" width="82" />
           <ElTableColumn prop="major" label="专业映射" width="98" />
           <ElTableColumn label="用电水平" min-width="150">
@@ -559,9 +559,15 @@ function formatImpactLevel(value: number, target: '用电' | '用水') {
 
       <div class="training-content">
         <div class="training-gallery">
-          <article v-for="imageItem in trainingImages" :key="imageItem.id" class="training-card">
+          <article
+            v-for="(imageItem, index) in trainingImages"
+            :key="imageItem.id"
+            class="training-card"
+            :class="{ featured: index === 0 }"
+          >
             <img :src="imageItem.imageUrl" :alt="imageItem.title" />
             <div>
+              <ElTag v-if="index === 0" size="small" type="success">重点结果</ElTag>
               <strong>{{ imageItem.title }}</strong>
               <span>{{ imageItem.description }}</span>
             </div>

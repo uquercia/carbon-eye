@@ -77,8 +77,8 @@ const getPredictionStatus = (building: BuildingRecord) => {
           <strong>{{ building.name }}</strong>
           <i>区域：{{ building.zone }}</i>
           <i>专业映射：{{ building.major }}</i>
-          <i>用电水平：{{ getEnergyLevel(building.electricityActual) }}（已脱敏）</i>
-          <i>用水水平：{{ getWaterLevel(building.waterActual) }}（已脱敏）</i>
+          <i>用电水平：{{ getEnergyLevel(building.electricityActual) }}</i>
+          <i>用水水平：{{ getWaterLevel(building.waterActual) }}</i>
           <i>预测状态：{{ getPredictionStatus(building) }}</i>
         </span>
       </button>
