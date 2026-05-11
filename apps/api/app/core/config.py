@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     database_url: str = "mysql+pymysql://root:你的MySQL密码@127.0.0.1:3306/carbon_eye?charset=utf8mb4"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
+    storage_backend: str = "local"
+    upload_dir: str = "apps/api/storage/uploads"
+    public_upload_base_url: str = "http://127.0.0.1:8000/uploads"
+    vision_provider: str = "ark"
+    vision_api_key: str = ""
+    vision_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
+    vision_model: str = ""
 
     model_config = SettingsConfigDict(
         env_file=API_DIR / ".env",

@@ -74,9 +74,9 @@ h2 {
 
 .dashboard-shell {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   min-height: 100vh;
-  padding: 18px;
+  padding: 22px;
 }
 
 /* 顶部标题栏 */
@@ -159,14 +159,14 @@ h2 {
 /* 中间主工作区：左侧任务栏 / 中间地图 / 右侧表格 */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 310px minmax(520px, 1fr) 520px;
-  gap: 14px;
+  grid-template-columns: 330px minmax(620px, 1fr) 560px;
+  gap: 18px;
   align-items: stretch;
 }
 
 .center-column {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   min-width: 0;
 }
 
@@ -174,7 +174,7 @@ h2 {
 .charts-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(360px, 0.8fr);
-  gap: 14px;
+  gap: 18px;
 }
 
 /* 通用面板样式：很多区域都复用这个基础卡片外观 */
@@ -184,7 +184,7 @@ h2 {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  padding: 16px;
+  padding: 18px;
 }
 
 .panel-header {
@@ -211,6 +211,26 @@ h2 {
   background: var(--surface-soft);
   color: var(--text-muted);
   text-align: center;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.upload-action-button,
+.upload-inline-button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+}
+
+.upload-action-button:disabled,
+.upload-inline-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .upload-box svg {
@@ -301,6 +321,8 @@ h2 {
 }
 
 .table-panel {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -314,6 +336,7 @@ h2 {
 }
 
 .energy-table {
+  flex: 1;
   width: 100%;
   margin-top: 14px;
 }
@@ -439,6 +462,21 @@ h2 {
   background: #fff;
 }
 
+.uploaded-preview {
+  width: 92px;
+  height: 68px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.uploaded-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
 .behavior-upload-empty svg {
   flex: 0 0 auto;
   color: var(--green-dark);
@@ -530,7 +568,7 @@ h2 {
 /* 中等屏幕下，适当压缩中间三栏的宽度 */
 @media (max-width: 1500px) {
   .workspace-grid {
-    grid-template-columns: 300px minmax(480px, 1fr) 460px;
+    grid-template-columns: 310px minmax(520px, 1fr) 500px;
   }
 }
 

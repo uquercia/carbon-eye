@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from apps.api.app.api.routes import router
+from apps.api.app.core.config import get_settings
 
 # FastAPI 应用对象。
 # 你可以把它理解成“后端服务的入口文件”：
@@ -27,3 +30,9 @@ app.add_middleware(
 
 # 把 apps/api/app/api/routes.py 里定义的所有接口挂到 app 上。
 app.include_router(router)
+
+# 把本地上传目录挂成静态文件服务。
+# 图片保存到 apps/api/storage/uploads 后，前端可以通过 /uploads/文件名 访问。
+settings = get_settings()
+Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")

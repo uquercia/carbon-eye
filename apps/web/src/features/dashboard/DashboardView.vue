@@ -14,8 +14,8 @@ import { ElProgress, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import AppChart from '../../shared/components/AppChart.vue'
 import BuildingMap from './components/BuildingMap.vue'
 import MetricTile from './components/MetricTile.vue'
-import { fetchDashboard } from './api/dashboardApi'
-import type { DashboardApiResponse } from './api/dashboardApi'
+import { fetchDashboard, uploadCampusImage } from './api/dashboardApi'
+import type { DashboardApiResponse, UploadImageResponse } from './api/dashboardApi'
 import {
   behaviorImpacts as fallbackBehaviorImpacts,
   behaviorScores as fallbackBehaviorScores,
@@ -37,6 +37,10 @@ import type { ChartOption } from './types/echarts'
 
 const loadingText = ref('正在连接后端 API')
 const apiError = ref('')
+const uploadInputRef = ref<HTMLInputElement>()
+const uploadStatus = ref('等待上传校园图片')
+const uploadedImage = ref<UploadImageResponse | null>(null)
+const uploading = ref(false)
 
 // 这些 ref 是页面真正使用的数据源。
 // 默认先放入本地兜底数据，避免后端没启动时页面空白。
@@ -123,6 +127,30 @@ onMounted(async () => {
     console.error(error)
   }
 })
+
+function openUploadPicker() {
+  uploadInputRef.value?.click()
+}
+
+async function handleImageSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  uploading.value = true
+  uploadStatus.value = '正在上传图片'
+  try {
+    const response = await uploadCampusImage(file)
+    uploadedImage.value = response
+    uploadStatus.value = response.message
+  } catch (error) {
+    uploadStatus.value = '上传失败，请检查后端服务和文件格式'
+    console.error(error)
+  } finally {
+    uploading.value = false
+    input.value = ''
+  }
+}
 
 const totals = computed(() => {
   // computed 是 Vue 的“计算属性”。
@@ -303,9 +331,18 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         </div>
 
         <div class="upload-box">
-          <Upload :size="28" />
+          <input
+            ref="uploadInputRef"
+            class="hidden-file-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            @change="handleImageSelected"
+          />
+          <button class="upload-action-button" type="button" :disabled="uploading" @click="openUploadPicker">
+            <Upload :size="28" />
+          </button>
           <strong>上传校园图片</strong>
-          <span>这里预留图片上传入口，后续接入模型后把识别结果写入数据库。</span>
+          <span>{{ uploadStatus }}</span>
         </div>
 
         <div class="task-list">
@@ -354,10 +391,12 @@ const behaviorChartOption = computed<ChartOption>(() => ({
 
           <div class="training-content">
             <div class="upload-inline">
-              <Upload :size="22" />
+              <button class="upload-inline-button" type="button" :disabled="uploading" @click="openUploadPicker">
+                <Upload :size="22" />
+              </button>
               <div>
                 <strong>上传校园图片后显示识别结果</strong>
-                <span>后续模型会输出行为、地点、置信度，并评估对用电/用水的影响。</span>
+                <span>{{ uploadStatus }}</span>
               </div>
             </div>
 
@@ -383,7 +422,7 @@ const behaviorChartOption = computed<ChartOption>(() => ({
           <span class="table-count">{{ tableData.length }} 条</span>
         </div>
 
-        <ElTable :data="tableData" height="440" size="small" class="energy-table">
+        <ElTable :data="tableData" height="100%" size="small" class="energy-table">
           <ElTableColumn prop="name" label="楼栋" min-width="128" fixed />
           <ElTableColumn prop="zone" label="区域" width="82" />
           <ElTableColumn prop="major" label="专业映射" width="98" />
@@ -413,13 +452,36 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       </div>
 
       <div class="behavior-upload-empty">
-        <FileImage :size="26" />
+        <img
+          v-if="uploadedImage"
+          class="uploaded-preview"
+          :src="uploadedImage.image.public_url"
+          :alt="uploadedImage.image.original_filename"
+        />
+        <FileImage v-else :size="26" />
         <div>
-          <strong>上传校园图片后生成行为影响分析</strong>
+          <strong>{{ uploadedImage ? uploadedImage.image.original_filename : '上传校园图片后生成行为影响分析' }}</strong>
           <span>
-            当前先不展示识别结论。图片上传并完成模型分析后，这里会列出行为 1、行为 2、位置、置信度，以及对用电/用水的影响。
+            {{
+              uploadedImage
+                ? uploadedImage.message
+                : '当前先不展示识别结论。图片上传并完成模型分析后，这里会列出行为 1、行为 2、位置、置信度，以及对用电/用水的影响。'
+            }}
           </span>
         </div>
+      </div>
+
+      <div v-if="uploadedImage?.results.length" class="uploaded-result-grid">
+        <article v-for="result in uploadedImage.results" :key="result.id" class="behavior-sample-card">
+          <div class="behavior-index">识别结果</div>
+          <strong>{{ result.behavior_name }}</strong>
+          <span>{{ result.location_name }} · 置信度 {{ Math.round(result.confidence * 100) }}%</span>
+          <p>{{ result.impact_summary }}</p>
+          <div class="impact-row">
+            <span>用电 {{ result.electricity_delta_kwh }} kWh</span>
+            <span>用水 {{ result.water_delta_m3 }} m³</span>
+          </div>
+        </article>
       </div>
 
       <div class="eco-tip-grid">

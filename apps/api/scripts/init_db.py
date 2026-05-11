@@ -17,7 +17,10 @@ from apps.api.app.models import (
     Building,
     EnergyPrediction,
     RecognitionSample,
+    RecognitionResult,
+    RecognitionTask,
     TrainingImage,
+    UploadedImage,
 )
 
 SOURCE_DIR = Path("G:/大创碳眸项目")
@@ -33,21 +36,38 @@ ENV_VALUES = dotenv_values(ENV_FILE)
 MYSQL_PASSWORD = ENV_VALUES.get("MYSQL_ROOT_PASSWORD") or "123456"
 
 BUILDING_META = {
-    "(溫室)園藝系": ("北区", "理工科", 24, 18),
-    "人文大樓": ("西区", "文科", 16, 44),
-    "動物醫學研究中心": ("东北区", "医学/生物", 58, 18),
-    "動科大樓": ("东北区", "医学/生物", 74, 30),
-    "化學大樓": ("中区", "理工科", 42, 42),
-    "學生活動中心": ("生活区", "其他", 58, 58),
-    "應科大樓": ("中区", "理工科", 34, 66),
-    "機械館": ("东区", "理工科", 78, 56),
-    "混凝土中心大樓": ("东区", "理工科", 86, 74),
+    "(温室)园艺系": ("北区", "理工科", 24, 18),
+    "人文大楼": ("西区", "文科", 16, 44),
+    "动物医学研究中心": ("东北区", "医学/生物", 58, 18),
+    "动科大楼": ("东北区", "医学/生物", 74, 30),
+    "化学大楼": ("中区", "理工科", 42, 42),
+    "学生活动中心": ("生活区", "其他", 58, 58),
+    "应科大楼": ("中区", "理工科", 34, 66),
+    "机械馆": ("东区", "理工科", 78, 56),
+    "混凝土中心大楼": ("东区", "理工科", 86, 74),
     "游泳池": ("体育区", "其他", 50, 82),
-    "生科大樓": ("北区", "医学/生物", 36, 24),
-    "行政大樓": ("南区", "其他", 20, 78),
-    "診斷中心": ("东北区", "医学/生物", 68, 46),
-    "農環大樓": ("北区", "理工科", 48, 12),
-    "體育館": ("体育区", "其他", 66, 86),
+    "生科大楼": ("北区", "医学/生物", 36, 24),
+    "行政大楼": ("南区", "其他", 20, 78),
+    "诊断中心": ("东北区", "医学/生物", 68, 46),
+    "农环大楼": ("北区", "理工科", 48, 12),
+    "体育馆": ("体育区", "其他", 66, 86),
+}
+
+TRADITIONAL_TO_SIMPLIFIED = {
+    "(溫室)園藝系": "(温室)园艺系",
+    "人文大樓": "人文大楼",
+    "動物醫學研究中心": "动物医学研究中心",
+    "動科大樓": "动科大楼",
+    "化學大樓": "化学大楼",
+    "學生活動中心": "学生活动中心",
+    "應科大樓": "应科大楼",
+    "機械館": "机械馆",
+    "混凝土中心大樓": "混凝土中心大楼",
+    "生科大樓": "生科大楼",
+    "行政大樓": "行政大楼",
+    "診斷中心": "诊断中心",
+    "農環大樓": "农环大楼",
+    "體育館": "体育馆",
 }
 
 MAJOR_NAMES = {
@@ -105,6 +125,9 @@ def reset_tables(db: Session) -> None:
     """清空演示数据，保证重复执行脚本时不会插入重复记录。"""
 
     for model in [
+        RecognitionResult,
+        RecognitionTask,
+        UploadedImage,
         TrainingImage,
         BehaviorImpact,
         RecognitionSample,
@@ -132,7 +155,9 @@ def import_buildings_and_predictions(db: Session) -> None:
     prediction_file = SOURCE_DIR / "prediction_results.csv"
     df = pd.read_csv(prediction_file)
 
-    building_names = sorted(df["建筑"].unique())
+    df["建筑"] = df["建筑"].replace(TRADITIONAL_TO_SIMPLIFIED)
+    # 保留 CSV 原始出现顺序，避免每次因为排序规则变化导致 building_01、building_02 对不上。
+    building_names = list(dict.fromkeys(df["建筑"].tolist()))
     for index, name in enumerate(building_names, start=1):
         zone, major, x, y = BUILDING_META.get(name, ("未分区", "其他", 20 + index * 4, 40))
         db.add(

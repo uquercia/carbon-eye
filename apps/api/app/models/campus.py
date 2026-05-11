@@ -1,4 +1,4 @@
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from apps.api.app.db.session import Base
@@ -121,3 +121,59 @@ class TrainingImage(Base):
     title: Mapped[str] = mapped_column(String(80), nullable=False)
     image_url: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class UploadedImage(Base):
+    """用户上传的校园图片表。
+
+    注意：数据库只保存图片地址和元数据，不保存图片二进制。
+    真正的图片文件放在本地目录或对象存储里。
+    """
+
+    __tablename__ = "uploaded_images"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    stored_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_type: Mapped[str] = mapped_column(String(30), nullable=False, default="local")
+    object_key: Mapped[str] = mapped_column(String(500), nullable=False)
+    public_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+
+
+class RecognitionTask(Base):
+    """图片识别任务表。
+
+    上传图片后先创建任务。模型分析完成后，再把结果写到 recognition_results。
+    """
+
+    __tablename__ = "recognition_tasks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    image_id: Mapped[int] = mapped_column(ForeignKey("uploaded_images.id"), nullable=False)
+    status: Mapped[str] = mapped_column(String(40), nullable=False, default="pending")
+    model_provider: Mapped[str] = mapped_column(String(60), nullable=False, default="none")
+    model_name: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    error_message: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+    finished_at: Mapped[str | None] = mapped_column(DateTime, nullable=True)
+
+
+class RecognitionResult(Base):
+    """真实图片识别结果表。
+
+    后续接入大模型或动作识别模型后，每识别到一个行为，就插入一条记录。
+    """
+
+    __tablename__ = "recognition_results"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("recognition_tasks.id"), nullable=False)
+    behavior_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    location_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    impact_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    electricity_delta_kwh: Mapped[float] = mapped_column(Float, nullable=False)
+    water_delta_m3: Mapped[float] = mapped_column(Float, nullable=False)

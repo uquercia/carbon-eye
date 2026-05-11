@@ -50,6 +50,13 @@
 
 当前建议：第一阶段先用本地文件存储。
 
+本项目当前已接入本地存储：
+
+- 上传接口：`POST /api/uploads/images`
+- 保存目录：`apps/api/storage/uploads`
+- 访问地址：`http://127.0.0.1:8000/uploads/文件名`
+- 数据库表：`uploaded_images`
+
 ### 方案 B：阿里云 OSS
 
 做法：
@@ -76,16 +83,56 @@
 - 数据库存 `object_key`、`public_url`、`content_type`、`file_size`、`created_at`。
 - 如果图片涉及隐私，Bucket 用私有读，前端通过后端获取临时签名 URL。
 
+结论：
+
+- 大创演示、单机运行：本地存储更合适，简单、稳定、少配置。
+- 真正上线、多用户访问：对象存储更合适，图片不占服务器磁盘，访问也更稳。
+- 无论选哪种，数据库都不建议直接存图片二进制，只存 URL 或 object key。
+
+## 视觉大模型选择
+
+### 豆包/火山方舟
+
+可以用。火山方舟官方文档里有“图片理解”能力，适合做校园图片中的行为描述、场景理解和结构化输出。项目后端已经按 OpenAI 兼容方式预留了配置：
+
+```env
+VISION_PROVIDER=ark
+VISION_API_KEY=你的火山方舟APIKey
+VISION_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+VISION_MODEL=你的视觉模型接入点ID
+```
+
+注意：火山方舟里通常不是直接填“豆包”两个字，而是填你创建的模型接入点 ID。
+
+### 阿里云百炼 Qwen-VL
+
+也适合。阿里百炼官方视觉理解文档显示 Qwen-VL 支持图片描述、视觉问答、物体定位、视频理解等能力，并提供 OpenAI 兼容调用方式。
+
+配置示例：
+
+```env
+VISION_PROVIDER=qwen
+VISION_API_KEY=你的百炼APIKey
+VISION_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+VISION_MODEL=qwen3.6-plus
+```
+
+### 当前建议
+
+优先选豆包/火山方舟，如果你已经更熟悉字节系控制台；否则选阿里百炼 Qwen-VL，因为文档对图片/视频理解示例比较完整。
+
+当前项目已经完成“可配置接入”，你拿到 API Key 和模型接入点后，只需要填 `.env` 并重启后端。
+
 ## 推荐落地路线
 
 ### 第一阶段：本地上传闭环
 
-- 增加 `uploaded_images` 表。
-- 增加 `recognition_tasks` 表。
-- 实现 `POST /api/uploads/images`。
-- 图片保存到本地 `apps/api/storage/uploads`。
-- 数据库保存图片 URL。
-- 前端上传后显示图片预览。
+- 已增加 `uploaded_images` 表。
+- 已增加 `recognition_tasks` 表。
+- 已实现 `POST /api/uploads/images`。
+- 已将图片保存到本地 `apps/api/storage/uploads`。
+- 已在数据库保存图片 URL。
+- 已实现前端上传后显示图片预览。
 
 ### 第二阶段：模拟识别结果
 
@@ -99,7 +146,8 @@
 
 ### 第三阶段：接入真实模型
 
-- 使用 YOLO 或自训练模型识别人、灯、水龙头、插座等目标。
+- 已预留视觉大模型服务层。
+- 后续可使用 YOLO 或自训练模型识别人、灯、水龙头、插座等目标。
 - 对动作识别可以先做轻量方案：
   - 单张图：目标检测 + 场景规则。
   - 视频：抽帧 + 动作分类模型。

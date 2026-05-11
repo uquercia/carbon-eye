@@ -4,7 +4,10 @@ from apps.api.app.models.campus import (
     Building,
     EnergyPrediction,
     RecognitionSample,
+    RecognitionResult,
+    RecognitionTask,
     TrainingImage,
+    UploadedImage,
 )
 
 __all__ = [
@@ -13,5 +16,8 @@ __all__ = [
     "Building",
     "EnergyPrediction",
     "RecognitionSample",
+    "RecognitionResult",
+    "RecognitionTask",
     "TrainingImage",
+    "UploadedImage",
 ]

@@ -147,6 +147,50 @@ GET /api/training-images
 apps/web/public/training
 ```
 
+## 8. 上传校园图片
+
+```http
+POST /api/uploads/images
+Content-Type: multipart/form-data
+```
+
+表单字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `file` | File | JPG、PNG、WEBP 图片 |
+
+用途：
+
+1. 保存校园图片到本地存储。
+2. 在 `uploaded_images` 表保存图片 URL。
+3. 创建 `recognition_tasks` 识别任务。
+4. 如果 `.env` 已配置视觉大模型，则调用模型并写入 `recognition_results`。
+5. 如果未配置模型，则返回等待配置状态。
+
+响应示例：
+
+```json
+{
+  "image": {
+    "id": 1,
+    "original_filename": "classroom.jpg",
+    "public_url": "http://127.0.0.1:8000/uploads/xxx.jpg",
+    "content_type": "image/jpeg",
+    "file_size": 123456
+  },
+  "task": {
+    "id": 1,
+    "status": "pending_model_config",
+    "model_provider": "none",
+    "model_name": "",
+    "error_message": "未配置视觉大模型 API Key，已完成图片保存，等待后续分析。"
+  },
+  "results": [],
+  "message": "图片已上传，等待配置视觉大模型后分析。"
+}
+```
+
 ## 数据库表
 
 | 表名 | 用途 |
@@ -157,6 +201,9 @@ apps/web/public/training
 | `recognition_samples` | 训练后/识别后行为样例 |
 | `behavior_impacts` | 行为影响规则 |
 | `training_images` | 训练结果图片 |
+| `uploaded_images` | 用户上传的校园图片 URL 和元数据 |
+| `recognition_tasks` | 图片识别任务状态 |
+| `recognition_results` | 大模型或动作识别模型输出的行为结果 |
 
 ## 初始化数据库
 

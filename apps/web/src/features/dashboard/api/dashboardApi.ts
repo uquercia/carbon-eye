@@ -78,6 +78,33 @@ export type DashboardApiResponse = {
   training_images: DashboardApiTrainingImage[]
 }
 
+export type UploadImageResponse = {
+  image: {
+    id: number
+    original_filename: string
+    public_url: string
+    content_type: string
+    file_size: number
+  }
+  task: {
+    id: number
+    status: string
+    model_provider: string
+    model_name: string
+    error_message: string
+  }
+  results: Array<{
+    id: number
+    behavior_name: string
+    location_name: string
+    confidence: number
+    impact_summary: string
+    electricity_delta_kwh: number
+    water_delta_m3: number
+  }>
+  message: string
+}
+
 // axios 实例。baseURL 是后端服务地址。
 // 后续如果后端部署到服务器，只需要把这里改成服务器 API 地址，
 // 或者改成从 .env 读取。
@@ -90,5 +117,14 @@ const apiClient = axios.create({
 // 这个函数只负责“请求接口并返回数据”，不负责页面展示。
 export async function fetchDashboard() {
   const response = await apiClient.get<DashboardApiResponse>('/api/dashboard')
+  return response.data
+}
+
+export async function uploadCampusImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<UploadImageResponse>('/api/uploads/images', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
   return response.data
 }

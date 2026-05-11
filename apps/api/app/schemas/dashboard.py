@@ -76,6 +76,56 @@ class TrainingImageOut(BaseModel):
     description: str
 
 
+class UploadedImageOut(BaseModel):
+    """上传图片返回给前端的信息。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    original_filename: str
+    storage_type: str
+    public_url: str
+    content_type: str
+    file_size: int
+
+
+class RecognitionTaskOut(BaseModel):
+    """图片识别任务状态。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    image_id: int
+    status: str
+    model_provider: str
+    model_name: str
+    error_message: str
+
+
+class RecognitionResultOut(BaseModel):
+    """上传图片后的真实识别结果。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    task_id: int
+    behavior_name: str
+    location_name: str
+    confidence: float
+    impact_summary: str
+    electricity_delta_kwh: float
+    water_delta_m3: float
+
+
+class UploadImageResponse(BaseModel):
+    """上传图片接口的完整响应。"""
+
+    image: UploadedImageOut
+    task: RecognitionTaskOut
+    results: list[RecognitionResultOut]
+    message: str
+
+
 class DashboardSummaryOut(BaseModel):
     """驾驶舱汇总数据。"""
 

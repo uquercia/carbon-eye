@@ -14,6 +14,7 @@ matplotlib>=3.10
 openpyxl>=3.1
 pillow>=11.0
 opencv-python>=4.10
+openai>=2.0
 playwright>=1.50
 torch>=2.6
 torchvision>=0.21
