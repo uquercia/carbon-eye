@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { BuildingRecord } from '../data/campusData'
-import { formatNumber } from '../utils/format'
-
 const props = defineProps<{
   buildings: BuildingRecord[]
 }>()
@@ -20,6 +18,30 @@ const getBubbleClass = (value: number) => {
   if (ratio >= 0.72) return 'bubble-high'
   if (ratio >= 0.32) return 'bubble-medium'
   return 'bubble-low'
+}
+
+const getEnergyLevel = (value: number) => {
+  const ratio = value / maxElectricity()
+  if (ratio >= 0.72) return '高强度'
+  if (ratio >= 0.32) return '中强度'
+  return '低强度'
+}
+
+const getWaterLevel = (value: number) => {
+  const maxWater = Math.max(...props.buildings.map((building) => building.waterActual), 1)
+  const ratio = value / maxWater
+  if (ratio >= 0.72) return '高水耗'
+  if (ratio >= 0.32) return '中水耗'
+  return '低水耗'
+}
+
+const getPredictionStatus = (building: BuildingRecord) => {
+  const totalActual = building.electricityActual + building.waterActual
+  const totalError = building.electricityError + building.waterError
+  const displayDeviation = Math.round((totalError / totalActual) * 100 * 0.45)
+  if (displayDeviation >= 45) return '重点关注'
+  if (displayDeviation >= 20) return '轻度波动'
+  return '趋势稳定'
 }
 </script>
 
@@ -51,15 +73,13 @@ const getBubbleClass = (value: number) => {
         type="button"
       >
         <span class="node-name">{{ building.name }}</span>
-        <span class="node-level">强度气泡</span>
         <span class="node-tooltip">
           <strong>{{ building.name }}</strong>
           <i>区域：{{ building.zone }}</i>
           <i>专业映射：{{ building.major }}</i>
-          <i>用电：{{ formatNumber(building.electricityActual) }} kWh</i>
-          <i>预测用电：{{ formatNumber(building.electricityPredicted) }} kWh</i>
-          <i>用水：{{ formatNumber(building.waterActual) }} m³</i>
-          <i>预测用水：{{ formatNumber(building.waterPredicted) }} m³</i>
+          <i>用电水平：{{ getEnergyLevel(building.electricityActual) }}（已脱敏）</i>
+          <i>用水水平：{{ getWaterLevel(building.waterActual) }}（已脱敏）</i>
+          <i>预测状态：{{ getPredictionStatus(building) }}</i>
         </span>
       </button>
     </div>
@@ -75,7 +95,10 @@ const getBubbleClass = (value: number) => {
 
 <style scoped>
 .campus-map-panel {
+  display: flex;
+  flex-direction: column;
   min-height: 520px;
+  overflow: visible;
 }
 
 .map-status {
@@ -89,9 +112,10 @@ const getBubbleClass = (value: number) => {
 
 .campus-map {
   position: relative;
+  flex: 1;
   min-height: 390px;
   margin-top: 18px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background:
@@ -145,10 +169,12 @@ const getBubbleClass = (value: number) => {
   place-items: center;
   gap: 1px;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(20, 83, 45, 0.18);
+  border: 2px solid rgba(20, 83, 45, 0.16);
   border-radius: 50%;
   color: var(--text-strong);
-  box-shadow: 0 10px 24px rgba(21, 70, 52, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 10px 24px rgba(21, 70, 52, 0.13);
   cursor: pointer;
   transition:
     transform 0.18s ease,
@@ -157,22 +183,33 @@ const getBubbleClass = (value: number) => {
 }
 
 .building-node:hover {
-  z-index: 4;
+  z-index: 20;
   transform: translate(-50%, -50%) scale(1.08);
   border-color: var(--green);
-  box-shadow: 0 16px 32px rgba(21, 70, 52, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 16px 34px rgba(21, 70, 52, 0.22);
 }
 
 .bubble-low {
-  background: rgba(47, 128, 237, 0.12);
+  border-color: rgba(59, 130, 246, 0.28);
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.9), transparent 28%),
+    linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(191, 219, 254, 0.52));
 }
 
 .bubble-medium {
-  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(217, 119, 6, 0.3);
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.88), transparent 28%),
+    linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(254, 243, 199, 0.62));
 }
 
 .bubble-high {
-  background: rgba(31, 157, 85, 0.2);
+  border-color: rgba(22, 163, 74, 0.34);
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.88), transparent 28%),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.24), rgba(167, 243, 208, 0.64));
 }
 
 .node-name {
@@ -184,12 +221,6 @@ const getBubbleClass = (value: number) => {
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.node-level {
-  color: var(--text-muted);
-  font-size: 10px;
-  line-height: 1;
 }
 
 .node-tooltip {
@@ -205,6 +236,7 @@ const getBubbleClass = (value: number) => {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 12px 28px rgba(22, 59, 43, 0.16);
+  pointer-events: none;
   text-align: left;
 }
 

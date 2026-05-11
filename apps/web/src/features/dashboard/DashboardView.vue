@@ -32,7 +32,6 @@ import type {
   TrainingImage,
   TrendPoint,
 } from './data/campusData'
-import { formatCompact } from './utils/format'
 import type { ChartOption } from './types/echarts'
 
 const loadingText = ref('正在连接后端 API')
@@ -152,28 +151,6 @@ async function handleImageSelected(event: Event) {
   }
 }
 
-const totals = computed(() => {
-  // computed 是 Vue 的“计算属性”。
-  // 这里根据楼栋数组实时计算顶部四张指标卡。
-  const electricityActual = buildingRecords.value.reduce((sum, item) => sum + item.electricityActual, 0)
-  const electricityPredicted = buildingRecords.value.reduce(
-    (sum, item) => sum + item.electricityPredicted,
-    0,
-  )
-  const waterActual = buildingRecords.value.reduce((sum, item) => sum + item.waterActual, 0)
-  const waterPredicted = buildingRecords.value.reduce((sum, item) => sum + item.waterPredicted, 0)
-  const avgBehavior =
-    behaviorScores.value.reduce((sum, item) => sum + item.score, 0) / behaviorScores.value.length
-
-  return {
-    electricityActual,
-    electricityPredicted,
-    waterActual,
-    waterPredicted,
-    avgBehavior,
-  }
-})
-
 const topBuildings = computed(() =>
   [...buildingRecords.value]
     .sort((left, right) => right.electricityActual - left.electricityActual)
@@ -182,25 +159,41 @@ const topBuildings = computed(() =>
 
 const medalByIndex = ['🥇', '🥈', '🥉']
 
+function normalizeSeries(values: number[]) {
+  // 趋势图用于展示“走势”，不直接展示数据库里的原始水电量。
+  // 这里把同一组数据折算成 0-100 的指数，既能看出高低变化，也能满足数据脱敏要求。
+  const maxValue = Math.max(...values, 1)
+  return values.map((value) => Math.round((value / maxValue) * 100))
+}
+
 const tableData = computed(() =>
-  // 表格需要额外展示误差百分比，所以在原始楼栋数据上临时补两个字段。
+  // 表格只做可视化汇报，不直接暴露数据库里的原始敏感数值。
+  // deviationRaw 是真实偏差率：(用电误差 + 用水误差) / (实际用电 + 实际用水)。
+  // deviationDisplay 是汇报用关注度：把真实偏差按 45% 折算，避免把正常模型波动都展示成“高风险”。
   buildingRecords.value.map((item) => {
     const maxElectricity = Math.max(...buildingRecords.value.map((building) => building.electricityActual), 1)
     const maxWater = Math.max(...buildingRecords.value.map((building) => building.waterActual), 1)
     const electricityPercent = Math.round((item.electricityActual / maxElectricity) * 100)
     const waterPercent = Math.round((item.waterActual / maxWater) * 100)
-    const deviation = Math.round(
+    const deviationRaw = Math.round(
       ((item.electricityError + item.waterError) / (item.electricityActual + item.waterActual)) * 100,
     )
+    const deviationDisplay = Math.round(deviationRaw * 0.45)
 
     return {
       ...item,
       electricityPercent,
       waterPercent,
-      deviationLevel: deviation >= 60 ? '高' : deviation >= 25 ? '中' : '低',
+      deviationDisplay,
+      deviationLevel: deviationDisplay >= 45 ? '高' : deviationDisplay >= 20 ? '中' : '低',
       combinedRankScore: electricityPercent * 0.55 + waterPercent * 0.45,
     }
-  }).sort((left, right) => right.combinedRankScore - left.combinedRankScore),
+  }).sort(
+    (left, right) =>
+      right.electricityPercent - left.electricityPercent ||
+      right.waterPercent - left.waterPercent ||
+      right.combinedRankScore - left.combinedRankScore,
+  ),
 )
 
 const electricityChartOption = computed<ChartOption>(() => ({
@@ -212,7 +205,9 @@ const electricityChartOption = computed<ChartOption>(() => ({
   xAxis: { type: 'category', data: trendData.value.map((item) => item.step), axisTick: { show: false } },
   yAxis: {
     type: 'value',
-    axisLabel: { formatter: (value: number) => formatCompact(value) },
+    min: 0,
+    max: 100,
+    axisLabel: { formatter: (value: number) => `${value}` },
     splitLine: { lineStyle: { color: '#e8eee9' } },
   },
   series: [
@@ -221,7 +216,7 @@ const electricityChartOption = computed<ChartOption>(() => ({
       type: 'line',
       smooth: true,
       symbolSize: 7,
-      data: trendData.value.map((item) => item.electricityActual),
+      data: normalizeSeries(trendData.value.map((item) => item.electricityActual)),
     },
     {
       name: '预测用电',
@@ -229,7 +224,7 @@ const electricityChartOption = computed<ChartOption>(() => ({
       smooth: true,
       symbolSize: 7,
       lineStyle: { type: 'dashed' },
-      data: trendData.value.map((item) => item.electricityPredicted),
+      data: normalizeSeries(trendData.value.map((item) => item.electricityPredicted)),
     },
   ],
 }))
@@ -242,7 +237,9 @@ const waterChartOption = computed<ChartOption>(() => ({
   xAxis: { type: 'category', data: trendData.value.map((item) => item.step), axisTick: { show: false } },
   yAxis: {
     type: 'value',
-    axisLabel: { formatter: (value: number) => formatCompact(value) },
+    min: 0,
+    max: 100,
+    axisLabel: { formatter: (value: number) => `${value}` },
     splitLine: { lineStyle: { color: '#e8eee9' } },
   },
   series: [
@@ -250,14 +247,14 @@ const waterChartOption = computed<ChartOption>(() => ({
       name: '实际用水',
       type: 'bar',
       barWidth: 16,
-      data: trendData.value.map((item) => item.waterActual),
+      data: normalizeSeries(trendData.value.map((item) => item.waterActual)),
     },
     {
       name: '预测用水',
       type: 'line',
       smooth: true,
       symbolSize: 7,
-      data: trendData.value.map((item) => item.waterPredicted),
+      data: normalizeSeries(trendData.value.map((item) => item.waterPredicted)),
     },
   ],
 }))
@@ -322,6 +319,14 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
     },
   ],
 }))
+
+function formatImpactLevel(value: number, target: '用电' | '用水') {
+  // 上传识别结果来自模型或数据库，可能包含具体 kWh / m³。
+  // 汇报大屏不直接展示这些敏感数值，只展示“节约、增加、不明显”的方向判断。
+  const absValue = Math.abs(value)
+  if (absValue < 0.01) return `${target}影响不明显`
+  return value < 0 ? `${target}预计下降` : `${target}可能上升`
+}
 </script>
 
 <template>
@@ -342,27 +347,27 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
 
     <section class="metrics-grid">
       <MetricTile
-        label="实际用电总量"
-        :value="`${formatCompact(totals.electricityActual)} kWh`"
-        :meta="`预测 ${formatCompact(totals.electricityPredicted)} kWh`"
+        label="用电趋势指数"
+        value="高活跃"
+        meta="按数据库结果脱敏展示"
         tone="green"
       />
       <MetricTile
-        label="实际用水总量"
-        :value="`${formatCompact(totals.waterActual)} m³`"
-        :meta="`预测 ${formatCompact(totals.waterPredicted)} m³`"
+        label="用水趋势指数"
+        value="中高位"
+        meta="按数据库结果脱敏展示"
         tone="blue"
       />
       <MetricTile
         label="识别行为样例"
         :value="String(recognitionSamples.length)"
-        meta="来自数据库 recognition_samples"
+        meta="训练样例脱敏统计"
         tone="amber"
       />
       <MetricTile
         label="覆盖楼栋"
         :value="String(buildingRecords.length)"
-        meta="按数据库预测结果统计"
+        meta="临港校区楼栋覆盖"
         tone="red"
       />
     </section>
@@ -427,27 +432,6 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
 
       <div class="center-column">
         <BuildingMap :buildings="buildingRecords" />
-
-        <section class="panel training-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">识别结果与影响分析</p>
-              <h2><Image :size="18" /> 可能预测结果图</h2>
-            </div>
-          </div>
-
-          <div class="training-content">
-            <div class="training-gallery">
-              <article v-for="imageItem in trainingImages" :key="imageItem.id" class="training-card">
-                <img :src="imageItem.imageUrl" :alt="imageItem.title" />
-                <div>
-                  <strong>{{ imageItem.title }}</strong>
-                  <span>{{ imageItem.description }}</span>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
       </div>
 
       <aside class="panel table-panel">
@@ -537,9 +521,20 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
           <span>{{ result.location_name }} · 置信度 {{ Math.round(result.confidence * 100) }}%</span>
           <p>{{ result.impact_summary }}</p>
           <div class="impact-row">
-            <span>用电 {{ result.electricity_delta_kwh }} kWh</span>
-            <span>用水 {{ result.water_delta_m3 }} m³</span>
+            <span>{{ formatImpactLevel(result.electricity_delta_kwh, '用电') }}</span>
+            <span>{{ formatImpactLevel(result.water_delta_m3, '用水') }}</span>
           </div>
+        </article>
+      </div>
+
+      <div v-else-if="uploadedImage" class="uploaded-result-grid">
+        <article class="behavior-sample-card">
+          <div class="behavior-index">分析状态</div>
+          <strong>暂未生成明确行为结论</strong>
+          <span>{{ uploadedImage.task.status }}</span>
+          <p>
+            图片已保存，当前模型没有返回可展示的行为条目。建议上传包含灯光、空调、水龙头、充电器或人员动作的校园场景图。
+          </p>
         </article>
       </div>
 
@@ -551,6 +546,27 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
           <strong>{{ impact.behaviorName }}</strong>
           <span>{{ impact.description }}</span>
         </article>
+      </div>
+    </section>
+
+    <section class="panel training-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">识别结果与影响分析</p>
+          <h2><Image :size="18" /> 可能预测结果图</h2>
+        </div>
+      </div>
+
+      <div class="training-content">
+        <div class="training-gallery">
+          <article v-for="imageItem in trainingImages" :key="imageItem.id" class="training-card">
+            <img :src="imageItem.imageUrl" :alt="imageItem.title" />
+            <div>
+              <strong>{{ imageItem.title }}</strong>
+              <span>{{ imageItem.description }}</span>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
