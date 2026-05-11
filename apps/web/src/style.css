@@ -1,0 +1,366 @@
+:root {
+  --bg: #eef3ef;
+  --surface: #ffffff;
+  --surface-soft: #f7faf8;
+  --text-strong: #1d2e28;
+  --text-body: #41524b;
+  --text-muted: #708178;
+  --border: #d7e1da;
+  --border-subtle: #e6eee8;
+  --green: #1f9d55;
+  --green-dark: #157347;
+  --blue: #2f80ed;
+  --amber: #f59e0b;
+  --red: #d94841;
+  --shadow: 0 14px 38px rgba(22, 59, 43, 0.08);
+  font-family:
+    Inter, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, -apple-system, sans-serif;
+  color: var(--text-body);
+  background: var(--bg);
+  font-synthesis: none;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 1280px;
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  padding: 0;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  color: var(--text-strong);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-strong);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.dashboard-shell {
+  display: grid;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.brand-block,
+.topbar-actions,
+.connection-pill {
+  display: flex;
+  align-items: center;
+}
+
+.brand-block {
+  gap: 14px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  background: var(--green-dark);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.connection-pill {
+  gap: 6px;
+  border: 1px solid rgba(31, 157, 85, 0.26);
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.08);
+  color: var(--green-dark);
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.connection-pill.muted {
+  border-color: var(--border-subtle);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 310px minmax(520px, 1fr) 520px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(360px, 0.8fr);
+  gap: 14px;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recognition-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.upload-box {
+  display: grid;
+  place-items: center;
+  min-height: 168px;
+  padding: 18px;
+  border: 1px dashed rgba(21, 115, 71, 0.34);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.upload-box svg {
+  margin-bottom: 8px;
+  color: var(--green-dark);
+}
+
+.upload-box strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.upload-box span {
+  max-width: 220px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.task-list {
+  display: grid;
+  gap: 10px;
+}
+
+.task-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.task-item.active {
+  background: rgba(31, 157, 85, 0.06);
+}
+
+.task-item strong,
+.task-item span {
+  display: block;
+}
+
+.task-item strong {
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.task-item span {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ranking-block {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.section-title {
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rank-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.rank-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-row strong {
+  color: var(--text-strong);
+  font-size: 12px;
+  text-align: right;
+}
+
+.table-panel {
+  overflow: hidden;
+}
+
+.table-count {
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.energy-table {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.chart-panel {
+  height: 340px;
+}
+
+.chart-panel .app-chart {
+  height: 274px;
+}
+
+.behavior-panel {
+  min-width: 360px;
+}
+
+.el-table {
+  --el-table-header-bg-color: #f7faf8;
+  --el-table-header-text-color: var(--text-strong);
+  --el-table-text-color: var(--text-body);
+  --el-table-border-color: var(--border-subtle);
+  --el-table-row-hover-bg-color: rgba(31, 157, 85, 0.06);
+  font-size: 12px;
+}
+
+.el-progress-bar__outer {
+  background-color: #e8eee9;
+}
+
+.el-progress-bar__inner {
+  background-color: var(--green);
+}
+
+@media (max-width: 1500px) {
+  .workspace-grid {
+    grid-template-columns: 300px minmax(480px, 1fr) 460px;
+  }
+}
+
+@media (max-width: 1280px) {
+  body {
+    min-width: 0;
+  }
+
+  .metrics-grid,
+  .charts-grid,
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-panel,
+  .campus-map-panel {
+    min-height: 360px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-actions {
+    justify-content: flex-start;
+  }
+}
