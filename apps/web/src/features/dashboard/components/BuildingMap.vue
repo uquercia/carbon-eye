@@ -2,10 +2,14 @@
 import type { BuildingRecord } from '../data/campusData'
 import { formatCompact } from '../utils/format'
 
+// 这个组件只负责中间“楼栋关系图”这块区域。
+// 父组件会把所有楼栋数据通过 props 传进来。
 defineProps<{
   buildings: BuildingRecord[]
 }>()
 
+// 根据楼栋用电量决定圆点大小。
+// 用电越高，圆越大；同时限制最小和最大尺寸，避免太小或太夸张。
 const getMarkerSize = (value: number) => {
   const size = 28 + Math.sqrt(value) / 32
   return `${Math.min(Math.max(size, 30), 58)}px`
@@ -13,6 +17,7 @@ const getMarkerSize = (value: number) => {
 </script>
 
 <template>
+  <!-- 外层 panel 复用了全局面板样式，内部再补地图专属内容 -->
   <section class="panel campus-map-panel">
     <div class="panel-header">
       <div>
@@ -22,7 +27,10 @@ const getMarkerSize = (value: number) => {
       <span class="map-status">15 栋建筑</span>
     </div>
 
+    <!-- 这块不是精确地图，而是“示意图”：
+         用 x / y 百分比坐标把楼栋按钮摆在容器里的某个位置 -->
     <div class="campus-map" aria-label="上海电机学院临港校区楼栋能耗示意图">
+      <!-- 这几条 route 是背景参考线，用来增强“校区道路/关系图”的视觉感觉 -->
       <div class="route route-a" />
       <div class="route route-b" />
       <div class="route route-c" />
@@ -38,11 +46,13 @@ const getMarkerSize = (value: number) => {
         }"
         type="button"
       >
+        <!-- 楼栋名和数值都来自 buildingRecords 数据文件 -->
         <span class="node-name">{{ building.name }}</span>
         <span class="node-value">{{ formatCompact(building.electricityActual) }}</span>
       </button>
     </div>
 
+    <!-- 底部图例：解释颜色点代表的专业/区域分类 -->
     <div class="legend-row">
       <span><i class="legend-dot science" />理工科</span>
       <span><i class="legend-dot medical" />医学/生物</span>

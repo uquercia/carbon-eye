@@ -1,3 +1,4 @@
+/* 全局设计变量：统一管理颜色、边框、阴影等基础视觉风格 */
 :root {
   --bg: #eef3ef;
   --surface: #ffffff;
@@ -66,6 +67,7 @@ h2 {
   line-height: 1.25;
 }
 
+/* 页面最外层：按“顶部栏 / 指标区 / 主工作区 / 图表区”纵向排列 */
 #app {
   min-height: 100vh;
 }
@@ -77,6 +79,7 @@ h2 {
   padding: 18px;
 }
 
+/* 顶部标题栏 */
 .topbar {
   display: flex;
   align-items: center;
@@ -146,12 +149,14 @@ h2 {
   text-transform: uppercase;
 }
 
+/* 顶部 4 张指标卡片区域：4 列均分 */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
+/* 中间主工作区：左侧任务栏 / 中间地图 / 右侧表格 */
 .workspace-grid {
   display: grid;
   grid-template-columns: 310px minmax(520px, 1fr) 520px;
@@ -159,12 +164,14 @@ h2 {
   align-items: stretch;
 }
 
+/* 底部图表区：3 个图表横向排列 */
 .charts-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(360px, 0.8fr);
   gap: 14px;
 }
 
+/* 通用面板样式：很多区域都复用这个基础卡片外观 */
 .panel {
   min-width: 0;
   border: 1px solid var(--border);
@@ -181,6 +188,7 @@ h2 {
   gap: 12px;
 }
 
+/* 左侧识别任务区域 */
 .recognition-panel {
   display: flex;
   flex-direction: column;
@@ -316,6 +324,7 @@ h2 {
   min-width: 360px;
 }
 
+/* Element Plus 组件的局部主题覆盖，让它们更贴合页面配色 */
 .el-table {
   --el-table-header-bg-color: #f7faf8;
   --el-table-header-text-color: var(--text-strong);
@@ -333,12 +342,14 @@ h2 {
   background-color: var(--green);
 }
 
+/* 中等屏幕下，适当压缩中间三栏的宽度 */
 @media (max-width: 1500px) {
   .workspace-grid {
     grid-template-columns: 300px minmax(480px, 1fr) 460px;
   }
 }
 
+/* 小屏幕下切成单列布局，避免横向挤压 */
 @media (max-width: 1280px) {
   body {
     min-width: 0;

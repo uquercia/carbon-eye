@@ -1,4 +1,8 @@
 <script setup lang="ts">
+// 这个页面是驾驶舱主页面：
+// 1. 从静态数据文件读取楼栋、行为分数、趋势数据
+// 2. 在这里做汇总和图表配置
+// 3. 再把结果传给 MetricTile、BuildingMap、AppChart 等子组件渲染
 import { computed } from 'vue'
 import {
   Activity,
@@ -17,6 +21,7 @@ import { behaviorScores, buildingRecords, trendData } from './data/campusData'
 import { formatCompact, formatNumber } from './utils/format'
 import type { ChartOption } from './types/echarts'
 
+// 总览数据：汇总楼栋的用电、用水、行为分数等数据
 const totals = computed(() => {
   const electricityActual = buildingRecords.reduce((sum, item) => sum + item.electricityActual, 0)
   const electricityPredicted = buildingRecords.reduce(
@@ -37,12 +42,14 @@ const totals = computed(() => {
   }
 })
 
+// 取出用电量最高的前 5 栋楼，用在左侧排行区域
 const topBuildings = computed(() =>
   [...buildingRecords]
     .sort((left, right) => right.electricityActual - left.electricityActual)
     .slice(0, 5),
 )
 
+// 表格展示用的数据：在原始楼栋数据基础上补充“误差百分比”字段
 const tableData = computed(() =>
   buildingRecords.map((item) => ({
     ...item,
@@ -51,6 +58,8 @@ const tableData = computed(() =>
   })),
 )
 
+// ECharts 的配置对象。AppChart 组件只负责“把图画出来”，
+// 真正画什么图、用哪些数据，都在这里定义。
 const electricityChartOption = computed<ChartOption>(() => ({
   color: ['#1f9d55', '#2f80ed'],
   tooltip: { trigger: 'axis' },
@@ -86,6 +95,7 @@ const electricityChartOption = computed<ChartOption>(() => ({
   ],
 }))
 
+// 用水图：实际值用柱状图，预测值用折线图，方便在一个图里对比
 const waterChartOption = computed<ChartOption>(() => ({
   color: ['#0ea5a7', '#f59e0b'],
   tooltip: { trigger: 'axis' },
@@ -119,6 +129,7 @@ const waterChartOption = computed<ChartOption>(() => ({
   ],
 }))
 
+// 行为得分图：展示不同专业的低碳行为得分
 const behaviorChartOption = computed<ChartOption>(() => ({
   color: ['#1f9d55'],
   tooltip: { trigger: 'axis' },
@@ -150,7 +161,9 @@ const behaviorChartOption = computed<ChartOption>(() => ({
 </script>
 
 <template>
+  <!-- 页面最外层容器，整体布局由全局样式里的 .dashboard-shell 控制 -->
   <main class="dashboard-shell">
+    <!-- 顶部标题栏：项目名 + 系统状态 -->
     <header class="topbar">
       <div class="brand-block">
         <div class="brand-mark">碳眸</div>
@@ -165,6 +178,8 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       </div>
     </header>
 
+    <!-- 顶部 4 个指标卡片。这里重复使用 MetricTile 组件，
+          每张卡片只传不同的 label / value / meta / tone -->
     <section class="metrics-grid">
       <MetricTile
         label="实际用电总量"
@@ -187,6 +202,7 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       <MetricTile label="覆盖楼栋" value="15" meta="按现有预测结果统计" tone="red" />
     </section>
 
+    <!-- 中间主工作区：左侧任务区 / 中间楼栋图 / 右侧表格 -->
     <section class="workspace-grid">
       <aside class="panel recognition-panel">
         <div class="panel-header">
@@ -197,12 +213,14 @@ const behaviorChartOption = computed<ChartOption>(() => ({
           <FileImage :size="22" />
         </div>
 
+        <!-- 这里目前只是上传入口的展示 UI，还没有真正接后端上传接口 -->
         <div class="upload-box">
           <Upload :size="28" />
           <strong>上传校园图片</strong>
           <span>当前先展示页面入口，行为和位置识别接口后续接入。</span>
         </div>
 
+        <!-- 左侧任务列表：也是静态展示，表示未来的功能模块 -->
         <div class="task-list">
           <div class="task-item active">
             <Activity :size="18" />
@@ -222,6 +240,7 @@ const behaviorChartOption = computed<ChartOption>(() => ({
           </div>
         </div>
 
+        <!-- 左下角排行：来自上面 topBuildings 计算结果 -->
         <div class="ranking-block">
           <div class="section-title">高用电楼栋</div>
           <div v-for="building in topBuildings" :key="building.id" class="rank-row">
@@ -236,8 +255,10 @@ const behaviorChartOption = computed<ChartOption>(() => ({
         </div>
       </aside>
 
+      <!-- 中间楼栋关系图：把楼栋数组整体传给 BuildingMap 组件 -->
       <BuildingMap :buildings="buildingRecords" />
 
+      <!-- 右侧表格：使用 Element Plus 的表格组件 -->
       <aside class="panel table-panel">
         <div class="panel-header">
           <div>
@@ -268,6 +289,8 @@ const behaviorChartOption = computed<ChartOption>(() => ({
       </aside>
     </section>
 
+     <!-- 底部图表区：3 个图表都通过 AppChart 组件渲染，
+          只是传入不同的 option 配置对象 -->
     <section class="charts-grid">
       <article class="panel chart-panel">
         <div class="panel-header">

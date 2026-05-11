@@ -1,3 +1,5 @@
+// 这里是当前页面使用的静态示例数据。
+// 现在项目还没有真正接后端 API，所以页面里的表格、图表、楼栋地图都先从这里读取。
 export type BuildingRecord = {
   id: string
   name: string
@@ -9,15 +11,19 @@ export type BuildingRecord = {
   waterPredicted: number
   electricityError: number
   waterError: number
+  // x / y 不是数据库字段意义上的坐标系统，而是页面示意图里的百分比坐标。
+  // 例如 x: 24 表示按钮放在地图容器左侧 24% 的位置。
   x: number
   y: number
 }
 
+// 不同专业的低碳行为评分数据，用于底部柱状图
 export type BehaviorScore = {
   major: string
   score: number
 }
 
+// 趋势图数据：每个 step 可以理解为一个时间步/一个采样点
 export type TrendPoint = {
   step: string
   electricityActual: number
@@ -26,6 +32,10 @@ export type TrendPoint = {
   waterPredicted: number
 }
 
+// 楼栋基础数据：
+// - 右侧表格会直接使用这些字段
+// - 中间地图会使用 name、electricityActual、x、y
+// - 顶部卡片和左侧排行会对这些数据做汇总/排序
 export const buildingRecords: BuildingRecord[] = [
   {
     id: 'greenhouse',
@@ -239,6 +249,7 @@ export const buildingRecords: BuildingRecord[] = [
   },
 ]
 
+// 不同专业问卷聚合后的行为分数
 export const behaviorScores: BehaviorScore[] = [
   { major: '理工科', score: 3.23 },
   { major: '文科', score: 4.0 },
@@ -248,6 +259,7 @@ export const behaviorScores: BehaviorScore[] = [
   { major: '其他', score: 3.49 },
 ]
 
+// 用电/用水趋势数据：供底部 2 个趋势图直接使用
 export const trendData: TrendPoint[] = [
   {
     step: '41',

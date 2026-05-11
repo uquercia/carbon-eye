@@ -1,13 +1,16 @@
 <script setup lang="ts">
+// 这是顶部指标卡片组件。
+// 它本身不计算数据，只负责接收父组件传来的文字并展示出来。
 defineProps<{
-  label: string
-  value: string
-  meta: string
-  tone?: 'green' | 'blue' | 'amber' | 'red'
+  label: string // 指标卡片的标签
+  value: string // 指标卡片的值
+  meta: string // 指标卡片的元数据
+  tone?: 'green' | 'blue' | 'amber' | 'red' // 指标卡片的颜色调
 }>()
 </script>
 
 <template>
+  <!-- tone 会附加一个颜色类名，用来控制左侧高亮色 -->
   <div class="metric-tile" :class="tone ?? 'green'">
     <span class="metric-label">{{ label }}</span>
     <strong>{{ value }}</strong>
