@@ -117,6 +117,18 @@ def reset_tables(db: Session) -> None:
 
 
 def import_buildings_and_predictions(db: Session) -> None:
+    """导入楼栋基础信息和水电预测数据。
+
+    prediction_results.csv 里每一行包含：
+    - 时间步
+    - 建筑名称
+    - 实际用电/预测用电
+    - 实际用水/预测用水
+    - 误差
+
+    我们先根据建筑名称创建 buildings 表，再把每一行预测结果写入 energy_predictions 表。
+    """
+
     prediction_file = SOURCE_DIR / "prediction_results.csv"
     df = pd.read_csv(prediction_file)
 
@@ -153,6 +165,12 @@ def import_buildings_and_predictions(db: Session) -> None:
 
 
 def import_behavior_scores(db: Session) -> None:
+    """导入专业低碳行为得分。
+
+    behavior_summary CSV 是问卷聚合结果。
+    每个专业类别一行，包含 Q3-Q10 的平均分和综合行为得分。
+    """
+
     behavior_file = SOURCE_DIR / "behavior_summary(1).csv"
     df = pd.read_csv(behavior_file)
 
@@ -177,6 +195,12 @@ def import_behavior_scores(db: Session) -> None:
 
 
 def seed_behavior_examples(db: Session) -> None:
+    """写入页面演示所需的行为提示和识别样例。
+
+    这里的数据用于演示“上传图片后应该展示什么结果”。
+    当前还没有真实模型推理，所以先用可解释的样例数据跑通页面。
+    """
+
     impacts = [
         ("随手关灯关空调", "用电", "离开教室后关闭照明和空调，可直接降低空载用电。", -0.12, 0.0),
         ("拔掉闲置充电器", "用电", "减少待机功耗，对宿舍和活动中心的小负荷有持续影响。", -0.04, 0.0),
@@ -270,6 +294,16 @@ def seed_behavior_examples(db: Session) -> None:
 
 
 def main() -> None:
+    """初始化入口。
+
+    执行顺序：
+    1. 创建 MySQL 数据库 carbon_eye
+    2. 根据 SQLAlchemy 模型建表
+    3. 复制训练结果图片到前端 public 目录
+    4. 清空旧演示数据
+    5. 导入 CSV 和样例数据
+    """
+
     create_database()
     Base.metadata.create_all(bind=engine)
     copy_training_images()

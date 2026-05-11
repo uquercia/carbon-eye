@@ -5,7 +5,11 @@ from apps.api.app.db.session import Base
 
 
 class Building(Base):
-    """校园楼栋基础表。"""
+    """校园楼栋基础表。
+
+    这张表只放楼栋“基本信息”，例如名称、区域、专业映射、地图坐标。
+    水电数据不直接放这里，因为同一栋楼会有很多时间步的数据。
+    """
 
     __tablename__ = "buildings"
 
@@ -16,11 +20,17 @@ class Building(Base):
     map_x: Mapped[float] = mapped_column(Float, nullable=False)
     map_y: Mapped[float] = mapped_column(Float, nullable=False)
 
+    # relationship 不是数据库字段，而是 SQLAlchemy 提供的对象关联。
+    # 有了它，可以通过 building.predictions 访问这栋楼的预测记录。
     predictions: Mapped[list["EnergyPrediction"]] = relationship(back_populates="building")
 
 
 class EnergyPrediction(Base):
-    """楼栋某个时间步的实际/预测用水用电数据。"""
+    """楼栋某个时间步的实际/预测用水用电数据。
+
+    一栋楼会在多个 time_step 下出现多条记录。
+    前端表格默认取最新 time_step 的数据。
+    """
 
     __tablename__ = "energy_predictions"
 
@@ -38,7 +48,11 @@ class EnergyPrediction(Base):
 
 
 class BehaviorScore(Base):
-    """问卷聚合后的专业低碳行为得分。"""
+    """问卷聚合后的专业低碳行为得分。
+
+    这张表来自 behavior_summary CSV。
+    每一行代表一个专业类别的平均行为得分。
+    """
 
     __tablename__ = "behavior_scores"
 
@@ -59,7 +73,8 @@ class BehaviorScore(Base):
 class RecognitionSample(Base):
     """识别结果样例表。
 
-    现在先用“训练完成后的示例数据”填充，后面接入真实模型后可直接写入真实识别结果。
+    现在先用“训练完成后的示例数据”填充。
+    后面接入真实图片上传和模型推理后，可以把真实识别结果写入类似结构的表。
     """
 
     __tablename__ = "recognition_samples"
@@ -77,7 +92,11 @@ class RecognitionSample(Base):
 
 
 class BehaviorImpact(Base):
-    """行为对水电消耗影响的规则说明。"""
+    """行为对水电消耗影响的规则说明。
+
+    这张表不是识别结果，而是“知识库/提示库”。
+    用户还没上传图片时，页面展示这些通用环保提示。
+    """
 
     __tablename__ = "behavior_impacts"
 
@@ -90,7 +109,11 @@ class BehaviorImpact(Base):
 
 
 class TrainingImage(Base):
-    """训练完成后的图片/图表展示表。"""
+    """训练完成后的图片/图表展示表。
+
+    数据库只保存图片 URL，不保存图片二进制内容。
+    这样数据库更轻，前端也可以直接通过 URL 加载图片。
+    """
 
     __tablename__ = "training_images"
 

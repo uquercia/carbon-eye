@@ -1,5 +1,8 @@
 import axios from 'axios'
 
+// 下面这些 type 和后端接口返回字段一一对应。
+// 后端 Python 常用 snake_case，比如 electricity_actual；
+// 前端页面内部更常用 camelCase，所以 DashboardView.vue 里会再转换一次。
 export type DashboardApiBuilding = {
   id: string
   name: string
@@ -75,11 +78,16 @@ export type DashboardApiResponse = {
   training_images: DashboardApiTrainingImage[]
 }
 
+// axios 实例。baseURL 是后端服务地址。
+// 后续如果后端部署到服务器，只需要把这里改成服务器 API 地址，
+// 或者改成从 .env 读取。
 const apiClient = axios.create({
   baseURL: 'http://127.0.0.1:8000',
   timeout: 8000,
 })
 
+// 获取首页驾驶舱数据。
+// 这个函数只负责“请求接口并返回数据”，不负责页面展示。
 export async function fetchDashboard() {
   const response = await apiClient.get<DashboardApiResponse>('/api/dashboard')
   return response.data

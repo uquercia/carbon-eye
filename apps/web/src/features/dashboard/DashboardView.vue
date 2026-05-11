@@ -38,6 +38,9 @@ import type { ChartOption } from './types/echarts'
 const loadingText = ref('正在连接后端 API')
 const apiError = ref('')
 
+// 这些 ref 是页面真正使用的数据源。
+// 默认先放入本地兜底数据，避免后端没启动时页面空白。
+// 如果 API 请求成功，onMounted 里会用数据库返回的数据覆盖它们。
 const buildingRecords = ref<BuildingRecord[]>(fallbackBuildingRecords)
 const behaviorScores = ref<BehaviorScore[]>(fallbackBehaviorScores)
 const trendData = ref<TrendPoint[]>(fallbackTrendData)
@@ -46,6 +49,7 @@ const behaviorImpacts = ref<BehaviorImpact[]>(fallbackBehaviorImpacts)
 const trainingImages = ref<TrainingImage[]>(fallbackTrainingImages)
 
 // 把后端 snake_case 字段转换成前端更常用的 camelCase。
+// 这样模板里写 item.electricityActual 会比 item.electricity_actual 更符合前端习惯。
 function applyDashboardData(data: DashboardApiResponse) {
   buildingRecords.value = data.buildings.map((item) => ({
     id: item.id,
@@ -107,6 +111,9 @@ function applyDashboardData(data: DashboardApiResponse) {
 
 onMounted(async () => {
   try {
+    // 页面加载完成后请求后端。
+    // 成功：使用 MySQL 数据。
+    // 失败：保留 fallback 静态数据，并在顶部提示用户。
     const data = await fetchDashboard()
     applyDashboardData(data)
     loadingText.value = 'API 数据已加载'
@@ -118,6 +125,8 @@ onMounted(async () => {
 })
 
 const totals = computed(() => {
+  // computed 是 Vue 的“计算属性”。
+  // 这里根据楼栋数组实时计算顶部四张指标卡。
   const electricityActual = buildingRecords.value.reduce((sum, item) => sum + item.electricityActual, 0)
   const electricityPredicted = buildingRecords.value.reduce(
     (sum, item) => sum + item.electricityPredicted,
@@ -144,6 +153,7 @@ const topBuildings = computed(() =>
 )
 
 const tableData = computed(() =>
+  // 表格需要额外展示误差百分比，所以在原始楼栋数据上临时补两个字段。
   buildingRecords.value.map((item) => ({
     ...item,
     electricityGapRate: `${Math.round((item.electricityError / item.electricityActual) * 100)}%`,
@@ -152,6 +162,8 @@ const tableData = computed(() =>
 )
 
 const electricityChartOption = computed<ChartOption>(() => ({
+  // ECharts 的配置对象。
+  // series 里第一条线是实际用电，第二条虚线是预测用电。
   color: ['#1f9d55', '#2f80ed'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
@@ -181,6 +193,7 @@ const electricityChartOption = computed<ChartOption>(() => ({
 }))
 
 const waterChartOption = computed<ChartOption>(() => ({
+  // 用水图：柱状图表示实际用水，折线表示预测用水。
   color: ['#0ea5a7', '#f59e0b'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
@@ -208,6 +221,7 @@ const waterChartOption = computed<ChartOption>(() => ({
 }))
 
 const behaviorChartOption = computed<ChartOption>(() => ({
+  // 行为得分图：展示不同专业的低碳行为问卷得分，满分按 5 分处理。
   color: ['#1f9d55'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 16, bottom: 34, left: 42 },
@@ -336,7 +350,6 @@ const behaviorChartOption = computed<ChartOption>(() => ({
               <p class="eyebrow">训练结果与影响分析</p>
               <h2><Image :size="18" /> 校园图片识别预留区</h2>
             </div>
-            <ElTag size="small" type="success">红框 1</ElTag>
           </div>
 
           <div class="training-content">
@@ -397,24 +410,22 @@ const behaviorChartOption = computed<ChartOption>(() => ({
           <p class="eyebrow">识别行为清单</p>
           <h2>行为 1 / 行为 2 / 行为影响</h2>
         </div>
-        <ElTag size="small">红框 2</ElTag>
       </div>
 
-      <div class="behavior-list-grid">
-        <article v-for="(sample, index) in recognitionSamples" :key="sample.id" class="behavior-sample-card">
-          <div class="behavior-index">行为 {{ index + 1 }}</div>
-          <strong>{{ sample.behaviorName }}</strong>
-          <span>{{ sample.locationName }} · 置信度 {{ Math.round(sample.confidence * 100) }}%</span>
-          <p>{{ sample.impactSummary }}</p>
-          <div class="impact-row">
-            <span>用电 {{ sample.electricityDeltaKwh }} kWh</span>
-            <span>用水 {{ sample.waterDeltaM3 }} m³</span>
-          </div>
-        </article>
+      <div class="behavior-upload-empty">
+        <FileImage :size="26" />
+        <div>
+          <strong>上传校园图片后生成行为影响分析</strong>
+          <span>
+            当前先不展示识别结论。图片上传并完成模型分析后，这里会列出行为 1、行为 2、位置、置信度，以及对用电/用水的影响。
+          </span>
+        </div>
+      </div>
 
+      <div class="eco-tip-grid">
         <article v-for="impact in behaviorImpacts" :key="`impact-${impact.id}`" class="impact-rule-card">
           <ElTag size="small" :type="impact.category === '用电' ? 'success' : 'info'">
-            {{ impact.category }}
+            环保提示 · {{ impact.category }}
           </ElTag>
           <strong>{{ impact.behaviorName }}</strong>
           <span>{{ impact.description }}</span>

@@ -411,7 +411,7 @@ h2 {
   min-height: 190px;
 }
 
-.behavior-list-grid {
+.eco-tip-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
@@ -425,6 +425,40 @@ h2 {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: var(--surface-soft);
+}
+
+.behavior-upload-empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 96px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px dashed rgba(21, 115, 71, 0.34);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.behavior-upload-empty svg {
+  flex: 0 0 auto;
+  color: var(--green-dark);
+}
+
+.behavior-upload-empty strong,
+.behavior-upload-empty span {
+  display: block;
+}
+
+.behavior-upload-empty strong {
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.behavior-upload-empty span {
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .behavior-index {
@@ -474,7 +508,15 @@ h2 {
   --el-table-text-color: var(--text-body);
   --el-table-border-color: var(--border-subtle);
   --el-table-row-hover-bg-color: rgba(31, 157, 85, 0.06);
-  font-size: 12px;
+  font-size: 14px;
+}
+
+.el-table th.el-table__cell {
+  font-size: 14px;
+}
+
+.el-table .cell {
+  line-height: 1.55;
 }
 
 .el-progress-bar__outer {
@@ -505,7 +547,7 @@ h2 {
   }
 
   .training-content,
-  .behavior-list-grid {
+  .eco-tip-grid {
     grid-template-columns: 1fr;
   }
 
