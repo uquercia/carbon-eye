@@ -1,4 +1,3 @@
-/* 全局设计变量：统一管理颜色、边框、阴影等基础视觉风格 */
 :root {
   --bg: #eef3ef;
   --surface: #ffffff;
@@ -68,7 +67,6 @@ h2 {
   line-height: 1.25;
 }
 
-/* 页面最外层：按“顶部栏 / 指标区 / 主工作区 / 图表区”纵向排列 */
 #app {
   min-height: 100vh;
 }
@@ -80,7 +78,6 @@ h2 {
   padding: 24px;
 }
 
-/* 顶部标题栏 */
 .topbar {
   display: flex;
   align-items: center;
@@ -151,14 +148,12 @@ h2 {
   text-transform: uppercase;
 }
 
-/* 顶部 4 张指标卡片区域：4 列均分 */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
-/* 中间主工作区：左侧任务栏 / 中间地图 / 右侧表格 */
 .workspace-grid {
   display: grid;
   grid-template-columns: 330px minmax(620px, 1fr) 560px;
@@ -173,14 +168,12 @@ h2 {
   height: 100%;
 }
 
-/* 底部图表区：3 个图表横向排列 */
 .charts-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(360px, 0.8fr);
   gap: 20px;
 }
 
-/* 通用面板样式：很多区域都复用这个基础卡片外观 */
 .panel {
   min-width: 0;
   border: 1px solid var(--border);
@@ -197,7 +190,6 @@ h2 {
   gap: 12px;
 }
 
-/* 左侧识别任务区域 */
 .recognition-panel {
   display: flex;
   flex-direction: column;
@@ -275,6 +267,20 @@ h2 {
   max-width: 220px;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.progress-block {
+  width: min(100%, 240px);
+  margin-top: 10px;
+}
+
+.progress-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--text-body);
+  font-size: 12px;
 }
 
 .task-list {
@@ -385,12 +391,19 @@ h2 {
 }
 
 .training-panel {
-  min-height: 320px;
+  min-height: 700px;
   overflow: hidden;
 }
 
 .training-content {
   margin-top: 16px;
+}
+
+.training-note {
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .upload-inline {
@@ -436,14 +449,15 @@ h2 {
 
 .training-gallery {
   display: grid;
-  grid-template-columns: minmax(360px, 1.25fr) repeat(3, minmax(180px, 0.75fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
 .training-card {
   position: relative;
   display: grid;
   align-content: start;
+  min-height: 360px;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -462,8 +476,8 @@ h2 {
 .training-card img {
   display: block;
   width: 100%;
-  height: 150px;
-  padding: 10px;
+  height: 250px;
+  padding: 14px;
   object-fit: contain;
   object-position: center;
   border-bottom: 1px solid var(--border-subtle);
@@ -471,20 +485,19 @@ h2 {
 }
 
 .training-card.featured {
-  min-height: 250px;
   border-color: var(--border-subtle);
   background: linear-gradient(180deg, #fff, #f7fbf8);
 }
 
 .training-card.featured img {
-  height: 180px;
-  padding: 12px;
+  height: 250px;
+  padding: 14px;
 }
 
 .training-card div {
   display: grid;
   gap: 7px;
-  padding: 12px;
+  padding: 14px;
 }
 
 .training-card strong {
@@ -651,7 +664,34 @@ h2 {
   gap: 8px;
 }
 
-/* Element Plus 组件的局部主题覆盖，让它们更贴合页面配色 */
+.recognition-tip-block {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: #fbfdfb;
+}
+
+.tip-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.tip-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid rgba(31, 157, 85, 0.16);
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.08);
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .el-table {
   --el-table-header-bg-color: #f7faf8;
   --el-table-header-text-color: var(--text-strong);
@@ -688,14 +728,12 @@ h2 {
   background-color: var(--green);
 }
 
-/* 中等屏幕下，适当压缩中间三栏的宽度 */
 @media (max-width: 1500px) {
   .workspace-grid {
     grid-template-columns: 310px minmax(520px, 1fr) 500px;
   }
 }
 
-/* 小屏幕下切成单列布局，避免横向挤压 */
 @media (max-width: 1180px) {
   body {
     min-width: 0;

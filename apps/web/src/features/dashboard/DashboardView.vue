@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   Activity,
-  Building2,
   Database,
   FileImage,
   Image,
@@ -14,8 +13,8 @@ import { ElProgress, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import AppChart from '../../shared/components/AppChart.vue'
 import BuildingMap from './components/BuildingMap.vue'
 import MetricTile from './components/MetricTile.vue'
-import { fetchDashboard, uploadCampusImage } from './api/dashboardApi'
-import type { DashboardApiResponse, UploadImageResponse } from './api/dashboardApi'
+import { fetchDashboard, fetchUploadTask, uploadCampusImage } from './api/dashboardApi'
+import type { DashboardApiResponse, UploadTaskResponse } from './api/dashboardApi'
 import {
   behaviorImpacts as fallbackBehaviorImpacts,
   behaviorScores as fallbackBehaviorScores,
@@ -38,12 +37,13 @@ const loadingText = ref('正在连接后端 API')
 const apiError = ref('')
 const uploadInputRef = ref<HTMLInputElement>()
 const uploadStatus = ref('等待上传校园图片')
-const uploadedImage = ref<UploadImageResponse | null>(null)
+const uploadedImage = ref<UploadTaskResponse | null>(null)
 const uploading = ref(false)
+const analyzing = ref(false)
+const uploadPercent = ref(0)
+const analysisPercent = ref(0)
+let pollingTimer: number | null = null
 
-// 这些 ref 是页面真正使用的数据源。
-// 默认先放入本地兜底数据，避免后端没启动时页面空白。
-// 如果 API 请求成功，onMounted 里会用数据库返回的数据覆盖它们。
 const buildingRecords = ref<BuildingRecord[]>(fallbackBuildingRecords)
 const behaviorScores = ref<BehaviorScore[]>(fallbackBehaviorScores)
 const trendData = ref<TrendPoint[]>(fallbackTrendData)
@@ -51,8 +51,6 @@ const recognitionSamples = ref<RecognitionSample[]>(fallbackRecognitionSamples)
 const behaviorImpacts = ref<BehaviorImpact[]>(fallbackBehaviorImpacts)
 const trainingImages = ref<TrainingImage[]>(fallbackTrainingImages)
 
-// 把后端 snake_case 字段转换成前端更常用的 camelCase。
-// 这样模板里写 item.electricityActual 会比 item.electricity_actual 更符合前端习惯。
 function applyDashboardData(data: DashboardApiResponse) {
   buildingRecords.value = data.buildings.map((item) => ({
     id: item.id,
@@ -114,9 +112,6 @@ function applyDashboardData(data: DashboardApiResponse) {
 
 onMounted(async () => {
   try {
-    // 页面加载完成后请求后端。
-    // 成功：使用 MySQL 数据。
-    // 失败：保留 fallback 静态数据，并在顶部提示用户。
     const data = await fetchDashboard()
     applyDashboardData(data)
     loadingText.value = 'API 数据已加载'
@@ -131,17 +126,61 @@ function openUploadPicker() {
   uploadInputRef.value?.click()
 }
 
+function stopPolling() {
+  if (pollingTimer !== null) {
+    window.clearTimeout(pollingTimer)
+    pollingTimer = null
+  }
+}
+
+function syncUploadTask(task: UploadTaskResponse) {
+  uploadedImage.value = task
+  analysisPercent.value = task.progress
+  uploadStatus.value = `${task.stage} · ${task.message}`
+}
+
+async function pollUploadTask(taskId: number) {
+  try {
+    const task = await fetchUploadTask(taskId)
+    syncUploadTask(task)
+    if (['queued', 'running'].includes(task.task.status)) {
+      analyzing.value = true
+      pollingTimer = window.setTimeout(() => {
+        void pollUploadTask(taskId)
+      }, 1200)
+      return
+    }
+  } catch (error) {
+    uploadStatus.value = '识别状态查询失败，请稍后刷新页面查看结果'
+    console.error(error)
+  }
+
+  analyzing.value = false
+  stopPolling()
+}
+
 async function handleImageSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
+  stopPolling()
   uploading.value = true
+  analyzing.value = false
+  uploadPercent.value = 0
+  analysisPercent.value = 0
+  uploadedImage.value = null
   uploadStatus.value = '正在上传图片'
   try {
-    const response = await uploadCampusImage(file)
-    uploadedImage.value = response
-    uploadStatus.value = response.message
+    const response = await uploadCampusImage(file, (percent) => {
+      uploadPercent.value = percent
+    })
+    uploadPercent.value = 100
+    syncUploadTask(response)
+    if (['queued', 'running'].includes(response.task.status)) {
+      analyzing.value = true
+      void pollUploadTask(response.task.id)
+    }
   } catch (error) {
     uploadStatus.value = '上传失败，请检查后端服务和文件格式'
     console.error(error)
@@ -150,6 +189,10 @@ async function handleImageSelected(event: Event) {
     input.value = ''
   }
 }
+
+onBeforeUnmount(() => {
+  stopPolling()
+})
 
 const topBuildings = computed(() =>
   [...buildingRecords.value]
@@ -160,16 +203,11 @@ const topBuildings = computed(() =>
 const medalByIndex = ['🥇', '🥈', '🥉']
 
 function normalizeSeries(values: number[]) {
-  // 趋势图用于展示“走势”，不直接展示数据库里的原始水电量。
-  // 这里把同一组数据折算成 0-100 的指数，既能看出高低变化，也能满足数据脱敏要求。
   const maxValue = Math.max(...values, 1)
   return values.map((value) => Math.round((value / maxValue) * 100))
 }
 
 const tableData = computed(() =>
-  // 表格只做可视化汇报，不直接暴露数据库里的原始敏感数值。
-  // deviationRaw 是真实偏差率：(用电误差 + 用水误差) / (实际用电 + 实际用水)。
-  // deviationDisplay 是汇报用关注度：把真实偏差按 45% 折算，避免把正常模型波动都展示成“高风险”。
   buildingRecords.value.map((item) => {
     const maxElectricity = Math.max(...buildingRecords.value.map((building) => building.electricityActual), 1)
     const maxWater = Math.max(...buildingRecords.value.map((building) => building.waterActual), 1)
@@ -197,8 +235,6 @@ const tableData = computed(() =>
 )
 
 const electricityChartOption = computed<ChartOption>(() => ({
-  // ECharts 的配置对象。
-  // series 里第一条线是实际用电，第二条虚线是预测用电。
   color: ['#1f9d55', '#2f80ed'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
@@ -230,7 +266,6 @@ const electricityChartOption = computed<ChartOption>(() => ({
 }))
 
 const waterChartOption = computed<ChartOption>(() => ({
-  // 用水图：柱状图表示实际用水，折线表示预测用水。
   color: ['#0ea5a7', '#f59e0b'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 18, bottom: 28, left: 56 },
@@ -260,7 +295,6 @@ const waterChartOption = computed<ChartOption>(() => ({
 }))
 
 const behaviorChartOption = computed<ChartOption>(() => ({
-  // 行为得分图：展示不同专业的低碳行为问卷得分，满分按 5 分处理。
   color: ['#1f9d55'],
   tooltip: { trigger: 'axis' },
   grid: { top: 28, right: 16, bottom: 34, left: 42 },
@@ -287,8 +321,10 @@ const behaviorChartOption = computed<ChartOption>(() => ({
   ],
 }))
 
+const behaviorImpactColors = ['#1f9d55', '#2f80ed', '#f59e0b', '#14b8a6', '#d94841', '#7c3aed', '#64748b', '#a16207']
+
 const behaviorImpactPieOption = computed<ChartOption>(() => ({
-  color: ['#1f9d55', '#2f80ed', '#f59e0b', '#0ea5a7', '#d94841', '#7c3aed', '#64748b'],
+  color: behaviorImpactColors,
   tooltip: {
     trigger: 'item',
     formatter: '{b}<br/>影响占比：{d}%',
@@ -315,40 +351,72 @@ const behaviorImpactPieOption = computed<ChartOption>(() => ({
           1,
           Math.round((Math.abs(item.electricityFactor) + Math.abs(item.waterFactor)) * 100),
         ),
+        itemStyle: {
+          color: behaviorImpactColors[(item.id - 1) % behaviorImpactColors.length],
+        },
       })),
     },
   ],
 }))
 
 function formatImpactLevel(value: number, target: '用电' | '用水') {
-  // 上传识别结果来自模型或数据库，可能包含具体 kWh / m³。
-  // 汇报大屏不直接展示这些敏感数值，只展示“节约、增加、不明显”的方向判断。
   const absValue = Math.abs(value)
   if (absValue < 0.01) return `${target}影响不明显`
   return value < 0 ? `${target}预计下降` : `${target}可能上升`
 }
 
-const presentationAnalysis = computed(() => {
-  // 这段用于答辩展示：真实模型如果没有稳定返回结构化行为，也不在界面上说“没有数据”。
-  // 先根据上传状态和图片名称给出保守、可信的场景化分析，后续行为识别模型完善后再替换成真实结果。
-  if (!uploadedImage.value) return null
-  const fileName = uploadedImage.value.image.original_filename
-  const isGameScene = /游戏|game|手机|屏幕|寝室|宿舍/i.test(fileName)
-  const behaviorName = isGameScene ? '长时间电子设备使用' : '校园场景用能行为'
-  const locationName = isGameScene ? '宿舍或公共活动区' : '校园公共区域'
-  const impactSummary = isGameScene
-    ? '图片中存在电子设备持续使用场景，可能带来插座待机、屏幕亮度和充电负载增加，建议结合离开场景自动提醒关闭设备。'
-    : '图片已完成视觉分析，可作为校园低碳行为样例进入后续复核流程，重点观察照明、空调、水龙头和充电设备状态。'
+const isTaskBusy = computed(() => uploading.value || analyzing.value)
+
+const taskStageTagType = computed(() => {
+  const status = uploadedImage.value?.task.status
+  if (status === 'succeeded') return 'success'
+  if (status === 'failed') return 'danger'
+  if (status === 'pending_model_config') return 'warning'
+  return 'info'
+})
+
+const resultTips = computed(() => uploadedImage.value?.tips ?? [])
+
+const taskSummaryCard = computed(() => {
+  if (!uploadedImage.value || uploadedImage.value.results.length > 0) return null
+
+  const { task, stage, message } = uploadedImage.value
+  if (task.status === 'queued' || task.status === 'running') {
+    return {
+      title: '识别进行中',
+      subtitle: `${stage} · 进度 ${analysisPercent.value}%`,
+      summary: message,
+      tags: ['请稍候', '后台异步识别'],
+    }
+  }
+
+  if (task.status === 'pending_model_config') {
+    return {
+      title: '等待模型配置',
+      subtitle: '已完成上传，但当前尚未产出真实识别结果',
+      summary: message,
+      tags: ['需配置视觉模型', '可先展示图片上传链路'],
+    }
+  }
+
+  if (task.status === 'failed') {
+    return {
+      title: '识别失败',
+      subtitle: '本次任务未返回可用结果',
+      summary: message,
+      tags: ['建议重新上传', '检查模型服务'],
+    }
+  }
 
   return {
-    behaviorName,
-    locationName,
-    confidence: 0.78,
-    impactSummary,
-    electricityLevel: isGameScene ? '用电可能上升' : '用电需复核',
-    waterLevel: '用水影响不明显',
+    title: '暂无明确行为结果',
+    subtitle: '当前图片未形成明确低碳行为判断',
+    summary: message,
+    tags: ['建议补拍关键动作', '优先近景清晰图'],
   }
 })
+
+const displayTrainingImages = computed(() => trainingImages.value.slice(0, 4))
 </script>
 
 <template>
@@ -357,7 +425,7 @@ const presentationAnalysis = computed(() => {
       <div class="brand-block">
         <div class="brand-mark">碳眸</div>
         <div>
-          <p class="eyebrow">上海电机学院临港校区</p>
+          <p class="eyebrow">中兴大学</p>
           <h1>校园低碳行为与水电预测驾驶舱</h1>
         </div>
       </div>
@@ -389,7 +457,7 @@ const presentationAnalysis = computed(() => {
       <MetricTile
         label="覆盖楼栋"
         :value="String(buildingRecords.length)"
-        meta="临港校区楼栋覆盖"
+        meta="中兴大学楼栋覆盖"
         tone="red"
       />
     </section>
@@ -404,7 +472,7 @@ const presentationAnalysis = computed(() => {
           <FileImage :size="22" />
         </div>
 
-        <button class="upload-box" type="button" :disabled="uploading" @click="openUploadPicker">
+        <button class="upload-box" type="button" :disabled="isTaskBusy" @click="openUploadPicker">
           <input
             ref="uploadInputRef"
             class="hidden-file-input"
@@ -417,6 +485,20 @@ const presentationAnalysis = computed(() => {
           </span>
           <strong>上传校园图片</strong>
           <span>{{ uploadStatus }}</span>
+          <div v-if="uploadPercent > 0" class="progress-block">
+            <div class="progress-caption">
+              <span>上传进度</span>
+              <span>{{ uploadPercent }}%</span>
+            </div>
+            <ElProgress :percentage="uploadPercent" :stroke-width="8" />
+          </div>
+          <div v-if="uploadedImage" class="progress-block">
+            <div class="progress-caption">
+              <span>识别进度</span>
+              <span>{{ analysisPercent }}%</span>
+            </div>
+            <ElProgress :percentage="analysisPercent" :stroke-width="8" status="success" />
+          </div>
         </button>
 
         <div class="task-list">
@@ -424,17 +506,9 @@ const presentationAnalysis = computed(() => {
             <Activity :size="18" />
             <div>
               <strong>低碳行为识别</strong>
-              <span>当前展示训练后样例数据</span>
+              <span>{{ uploadedImage ? uploadedImage.stage : '当前展示训练后样例数据' }}</span>
             </div>
-            <ElTag size="small" type="success">样例</ElTag>
-          </div>
-          <div class="task-item">
-            <Building2 :size="18" />
-            <div>
-              <strong>楼栋归属判断</strong>
-              <span>当前按样例数据关联楼栋</span>
-            </div>
-            <ElTag size="small" type="warning">预留</ElTag>
+            <ElTag size="small" :type="taskStageTagType">{{ uploadedImage ? uploadedImage.task.status : '样例' }}</ElTag>
           </div>
         </div>
 
@@ -529,7 +603,7 @@ const presentationAnalysis = computed(() => {
 
         <div class="behavior-pie-card">
           <div>
-            <p class="eyebrow">伪造展示数据</p>
+            <p class="eyebrow">行为规则数据</p>
             <strong>低碳行为影响占比</strong>
           </div>
           <AppChart :option="behaviorImpactPieOption" />
@@ -549,42 +623,42 @@ const presentationAnalysis = computed(() => {
         </article>
       </div>
 
-      <div v-else-if="presentationAnalysis" class="uploaded-result-grid">
+      <div v-else-if="taskSummaryCard" class="uploaded-result-grid">
         <article class="behavior-sample-card">
-          <div class="behavior-index">AI 场景分析</div>
-          <strong>{{ presentationAnalysis.behaviorName }}</strong>
-          <span>{{ presentationAnalysis.locationName }} · 置信度 {{ Math.round(presentationAnalysis.confidence * 100) }}%</span>
-          <p>{{ presentationAnalysis.impactSummary }}</p>
+          <div class="behavior-index">任务状态</div>
+          <strong>{{ taskSummaryCard.title }}</strong>
+          <span>{{ taskSummaryCard.subtitle }}</span>
+          <p>{{ taskSummaryCard.summary }}</p>
           <div class="impact-row">
-            <span>{{ presentationAnalysis.electricityLevel }}</span>
-            <span>{{ presentationAnalysis.waterLevel }}</span>
+            <span v-for="tag in taskSummaryCard.tags" :key="tag">{{ tag }}</span>
           </div>
         </article>
       </div>
 
-      <div class="eco-tip-grid">
-        <article v-for="impact in behaviorImpacts" :key="`impact-${impact.id}`" class="impact-rule-card">
-          <ElTag size="small" :type="impact.category === '用电' ? 'success' : 'info'">
-            环保提示 · {{ impact.category }}
-          </ElTag>
-          <strong>{{ impact.behaviorName }}</strong>
-          <span>{{ impact.description }}</span>
-        </article>
+      <div v-if="resultTips.length" class="recognition-tip-block">
+        <div class="section-title">如何更容易识别出明确低碳行为</div>
+        <div class="tip-chip-row">
+          <span v-for="tip in resultTips" :key="tip" class="tip-chip">{{ tip }}</span>
+        </div>
       </div>
+
     </section>
 
     <section class="panel training-panel">
       <div class="panel-header">
         <div>
           <p class="eyebrow">识别结果与影响分析</p>
-          <h2><Image :size="18" /> 可能预测结果图</h2>
+          <h2><Image :size="18" /> 关联展示图建议</h2>
         </div>
       </div>
 
       <div class="training-content">
+        <p class="training-note">
+          功能未实现。当前区域固定展示 4 张训练结果图，用于汇报时说明模型训练产出。
+        </p>
         <div class="training-gallery">
           <article
-            v-for="(imageItem, index) in trainingImages"
+            v-for="(imageItem, index) in displayTrainingImages"
             :key="imageItem.id"
             class="training-card"
             :class="{ featured: index === 0 }"

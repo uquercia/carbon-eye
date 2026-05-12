@@ -1,8 +1,6 @@
 import axios from 'axios'
+import type { AxiosProgressEvent } from 'axios'
 
-// 下面这些 type 和后端接口返回字段一一对应。
-// 后端 Python 常用 snake_case，比如 electricity_actual；
-// 前端页面内部更常用 camelCase，所以 DashboardView.vue 里会再转换一次。
 export type DashboardApiBuilding = {
   id: string
   name: string
@@ -78,23 +76,27 @@ export type DashboardApiResponse = {
   training_images: DashboardApiTrainingImage[]
 }
 
-export type UploadImageResponse = {
+export type UploadTaskResponse = {
   image: {
     id: number
     original_filename: string
+    storage_type: string
     public_url: string
     content_type: string
     file_size: number
   }
   task: {
     id: number
+    image_id: number
     status: string
     model_provider: string
     model_name: string
     error_message: string
+    finished_at: string | null
   }
   results: Array<{
     id: number
+    task_id: number
     behavior_name: string
     location_name: string
     confidence: number
@@ -103,28 +105,38 @@ export type UploadImageResponse = {
     water_delta_m3: number
   }>
   message: string
+  progress: number
+  stage: string
+  tips: string[]
 }
 
-// axios 实例。baseURL 是后端服务地址。
-// 后续如果后端部署到服务器，只需要把这里改成服务器 API 地址，
-// 或者改成从 .env 读取。
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000',
   timeout: 8000,
 })
 
-// 获取首页驾驶舱数据。
-// 这个函数只负责“请求接口并返回数据”，不负责页面展示。
 export async function fetchDashboard() {
-  const response = await apiClient.get<DashboardApiResponse>('/api/dashboard')
+  const response = await apiClient.get<DashboardApiResponse>('/dashboard')
   return response.data
 }
 
-export async function uploadCampusImage(file: File) {
+export async function uploadCampusImage(
+  file: File,
+  onProgress?: (percentage: number) => void,
+) {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await apiClient.post<UploadImageResponse>('/api/uploads/images', formData, {
+  const response = await apiClient.post<UploadTaskResponse>('/uploads/images', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress(progressEvent: AxiosProgressEvent) {
+      if (!onProgress || !progressEvent.total) return
+      onProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
+    },
   })
+  return response.data
+}
+
+export async function fetchUploadTask(taskId: number) {
+  const response = await apiClient.get<UploadTaskResponse>(`/uploads/tasks/${taskId}`)
   return response.data
 }

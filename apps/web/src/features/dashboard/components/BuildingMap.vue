@@ -49,13 +49,13 @@ const getPredictionStatus = (building: BuildingRecord) => {
   <section class="panel campus-map-panel">
     <div class="panel-header">
       <div>
-        <p class="eyebrow">临港校区楼栋关系</p>
+        <p class="eyebrow">中兴大学楼栋关系</p>
         <h2>能耗与行为关联图</h2>
       </div>
       <span class="map-status">15 栋建筑</span>
     </div>
 
-    <div class="campus-map" aria-label="上海电机学院临港校区楼栋能耗气泡图">
+    <div class="campus-map" aria-label="中兴大学楼栋能耗气泡图">
       <div class="route route-a" />
       <div class="route route-b" />
       <div class="route route-c" />
@@ -126,7 +126,7 @@ const getPredictionStatus = (building: BuildingRecord) => {
 }
 
 .campus-map::before {
-  content: '上海电机学院 临港校区';
+  content: '中兴大学';
   position: absolute;
   left: 18px;
   bottom: 14px;

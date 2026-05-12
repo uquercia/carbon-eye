@@ -1,0 +1,12 @@
+.git
+.idea
+.venv
+deploy_artifacts
+apps/web/node_modules
+apps/web/dist
+apps/api/storage
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log

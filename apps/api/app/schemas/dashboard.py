@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -100,6 +102,7 @@ class RecognitionTaskOut(BaseModel):
     model_provider: str
     model_name: str
     error_message: str
+    finished_at: datetime | None = None
 
 
 class RecognitionResultOut(BaseModel):
@@ -124,6 +127,9 @@ class UploadImageResponse(BaseModel):
     task: RecognitionTaskOut
     results: list[RecognitionResultOut]
     message: str
+    progress: int
+    stage: str
+    tips: list[str]
 
 
 class DashboardSummaryOut(BaseModel):

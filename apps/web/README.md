@@ -19,5 +19,5 @@ npm.cmd run build
 
 - `src/features/dashboard/DashboardView.vue`：驾驶舱主页面。
 - `src/features/dashboard/data/campusData.ts`：临时静态数据，后续替换为后端 API。
-- `src/features/dashboard/components/BuildingMap.vue`：临港校区楼栋关系示意图。
+- `src/features/dashboard/components/BuildingMap.vue`：中兴大学楼栋关系示意图。
 - `src/shared/components/AppChart.vue`：ECharts 通用封装。

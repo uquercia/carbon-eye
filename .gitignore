@@ -5,10 +5,12 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!deploy/docker/.env.server.example
 node_modules/
 dist/
 coverage/
 *.log
+deploy_artifacts/
 apps/api/storage/uploads/*
 !apps/api/storage/uploads/.gitkeep
 .DS_Store

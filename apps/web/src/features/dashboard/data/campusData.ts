@@ -1,5 +1,3 @@
-// 这里是当前页面使用的静态示例数据。
-// 现在项目还没有真正接后端 API，所以页面里的表格、图表、楼栋地图都先从这里读取。
 export type BuildingRecord = {
   id: string
   name: string
@@ -11,19 +9,15 @@ export type BuildingRecord = {
   waterPredicted: number
   electricityError: number
   waterError: number
-  // x / y 不是数据库字段意义上的坐标系统，而是页面示意图里的百分比坐标。
-  // 例如 x: 24 表示按钮放在地图容器左侧 24% 的位置。
   x: number
   y: number
 }
 
-// 不同专业的低碳行为评分数据，用于底部柱状图
 export type BehaviorScore = {
   major: string
   score: number
 }
 
-// 趋势图数据：每个 step 可以理解为一个时间步/一个采样点
 export type TrendPoint = {
   step: string
   electricityActual: number
@@ -61,10 +55,6 @@ export type TrainingImage = {
   description: string
 }
 
-// 楼栋基础数据：
-// - 右侧表格会直接使用这些字段
-// - 中间地图会使用 name、electricityActual、x、y
-// - 顶部卡片和左侧排行会对这些数据做汇总/排序
 export const buildingRecords: BuildingRecord[] = [
   {
     id: 'greenhouse',
@@ -278,7 +268,6 @@ export const buildingRecords: BuildingRecord[] = [
   },
 ]
 
-// 不同专业问卷聚合后的行为分数
 export const behaviorScores: BehaviorScore[] = [
   { major: '理工科', score: 3.23 },
   { major: '文科', score: 4.0 },
@@ -288,7 +277,6 @@ export const behaviorScores: BehaviorScore[] = [
   { major: '其他', score: 3.49 },
 ]
 
-// 用电/用水趋势数据：供底部 2 个趋势图直接使用
 export const trendData: TrendPoint[] = [
   {
     step: '41',
@@ -372,11 +360,59 @@ export const behaviorImpacts: BehaviorImpact[] = [
   },
   {
     id: 2,
+    behaviorName: '拔掉闲置充电器',
+    category: '用电',
+    description: '减少待机功耗，对宿舍和活动中心的小负荷有持续影响。',
+    electricityFactor: -0.04,
+    waterFactor: 0,
+  },
+  {
+    id: 3,
+    behaviorName: '白天优先自然采光',
+    category: '用电',
+    description: '白天减少照明开启时长，适合教学楼和办公楼。',
+    electricityFactor: -0.08,
+    waterFactor: 0,
+  },
+  {
+    id: 4,
+    behaviorName: '拔插头断电',
+    category: '用电',
+    description: '离开宿舍、实验室或办公室前关闭插排并拔掉插头，可减少电脑、显示器和外设待机耗电。',
+    electricityFactor: -0.07,
+    waterFactor: 0,
+  },
+  {
+    id: 5,
     behaviorName: '及时关闭水龙头',
     category: '用水',
     description: '洗手、清洁后关闭水龙头，可降低公共区域用水浪费。',
     electricityFactor: 0,
     waterFactor: -0.1,
+  },
+  {
+    id: 6,
+    behaviorName: '缩短淋浴时间',
+    category: '用水',
+    description: '降低宿舍和体育区生活热水/冷水消耗。',
+    electricityFactor: -0.02,
+    waterFactor: -0.16,
+  },
+  {
+    id: 7,
+    behaviorName: '集中洗涤衣物',
+    category: '用水',
+    description: '减少洗衣机低负载运行次数，同时降低水电消耗。',
+    electricityFactor: -0.06,
+    waterFactor: -0.12,
+  },
+  {
+    id: 8,
+    behaviorName: '主动报修漏水漏电',
+    category: '综合',
+    description: '通过报修异常设备减少持续浪费，是高价值干预行为。',
+    electricityFactor: -0.1,
+    waterFactor: -0.14,
   },
 ]
 

@@ -13,5 +13,6 @@ scikit-learn>=1.6
 matplotlib>=3.10
 openpyxl>=3.1
 pillow>=11.0
+cryptography>=46.0
 playwright>=1.50
 openai>=2.0

@@ -1,0 +1,67 @@
+services:
+  db:
+    image: docker.m.daocloud.io/library/mysql:8.4
+    container_name: carbon-eye-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: carbon_eye
+      MYSQL_USER: carbon_eye_app
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+      # 首次启动时自动导入建库/建表或完整数据转储。
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/api.Dockerfile
+    image: carbon-eye-api:server
+    container_name: carbon-eye-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://carbon_eye_app:${MYSQL_APP_PASSWORD}@db:3306/carbon_eye?charset=utf8mb4
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      STORAGE_BACKEND: local
+      UPLOAD_DIR: /app/apps/api/storage/uploads
+      PUBLIC_UPLOAD_BASE_URL: ${PUBLIC_UPLOAD_BASE_URL}
+      VISION_PROVIDER: ${VISION_PROVIDER}
+      VISION_API_KEY: ${VISION_API_KEY}
+      VISION_BASE_URL: ${VISION_BASE_URL}
+      VISION_MODEL: ${VISION_MODEL}
+    volumes:
+      # 上传目录单独挂卷，避免容器重建时丢文件。
+      - uploads_data:/app/apps/api/storage/uploads
+    expose:
+      - "8000"
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/web.Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    image: carbon-eye-web:server
+    container_name: carbon-eye-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:
+  uploads_data:
