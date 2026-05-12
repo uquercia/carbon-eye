@@ -253,3 +253,83 @@ bash deploy/docker/build-on-server.sh
 ```
 
 这是当前项目唯一保留、也是线上实际在用的部署链路。
+
+## 11. 这套流程是不是可以不传文件
+
+不可以。
+
+`build-on-server.sh` 只负责在云端做这几件事：
+
+- 检查 Docker 是否存在
+- 检查 `.env` 是否存在
+- 准备 MySQL 初始化 SQL
+- 执行 `docker compose build`
+- 执行 `docker compose up -d`
+
+它不会自动从你本地电脑拉代码到服务器。
+
+所以完整流程仍然是两段：
+
+1. 先把你本地改过的代码同步到服务器 `/opt/carbon-eye-campus`
+2. 再在服务器执行 `bash deploy/docker/build-on-server.sh`
+
+之所以必须先传文件，原因很简单：
+
+- Docker 构建时读取的是服务器本地目录里的源码
+- `docker compose build` 的构建上下文是 `/opt/carbon-eye-campus`
+- 如果服务器目录里的代码没更新，Docker 看到的仍然是旧文件
+- 那么即使你重新 build，打出来的也还是旧版本镜像
+
+你可以把它理解成：
+
+- “同步代码到服务器” 负责更新原材料
+- `build-on-server.sh` 负责用这些原材料重新做镜像并启动容器
+
+两步缺一不可。
+
+## 12. 为什么我之前看起来像是不用传文件
+
+因为前面我帮你操作时，代码同步这一步是我单独做掉了，所以你后面看到的命令只剩：
+
+```bash
+cd /opt/carbon-eye-campus
+bash deploy/docker/build-on-server.sh
+```
+
+但那不是说“不用传文件”，而是“传文件这一步已经提前完成了”。
+
+如果你自己后面发布，正确理解应该是：
+
+- 你改了本地代码
+- 先上传或同步到 `/opt/carbon-eye-campus`
+- 再执行 Docker 构建脚本
+
+## 13. 以后最稳的实际操作顺序
+
+推荐固定按这个顺序：
+
+1. 本地修改代码
+2. 本地先验证能不能跑
+3. 把改过的文件同步到服务器 `/opt/carbon-eye-campus`
+4. 云端执行：
+
+```bash
+cd /opt/carbon-eye-campus
+bash deploy/docker/build-on-server.sh
+```
+
+如果只改了前端，也可以只重建前端：
+
+```bash
+cd /opt/carbon-eye-campus
+docker compose -f deploy/docker/docker-compose.server-build.yml build web
+docker compose -f deploy/docker/docker-compose.server-build.yml up -d web
+```
+
+如果只改了后端，也可以只重建后端：
+
+```bash
+cd /opt/carbon-eye-campus
+docker compose -f deploy/docker/docker-compose.server-build.yml build api
+docker compose -f deploy/docker/docker-compose.server-build.yml up -d api
+```
