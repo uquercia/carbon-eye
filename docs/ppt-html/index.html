@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-themes="corporate-clean,academic-paper,swiss-grid,tokyo-night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>碳眸校园数据报表答辩展示</title>
+<link rel="stylesheet" href="./assets/fonts.css">
+<link rel="stylesheet" href="./assets/base.css">
+<link rel="stylesheet" id="theme-link" href="./assets/themes/corporate-clean.css">
+<link rel="stylesheet" href="./assets/animations/animations.css">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body class="tpl-campus-defense">
+<div class="deck">
+  <section class="slide" data-title="封面">
+    <p class="kicker">carbon-eye campus / defense deck</p>
+    <h1 class="hero-title anim-fade-up" data-anim="fade-up">
+      校园数据报表<br>
+      <span class="accent">怎么得出，怎么统计，最后说明什么</span>
+    </h1>
+    <p class="lede">
+      这套展示不强调技术名词，重点解释报表形成过程：数据从哪里来，前端怎么整理成图，老师最后能从图里看出什么。
+    </p>
+    <div class="hero-grid">
+      <div class="metric-card">
+        <span class="metric-label">报表 01</span>
+        <strong>楼栋能耗分布</strong>
+        <p>最新时间步的楼栋状态总览</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">报表 02</span>
+        <strong>趋势对比</strong>
+        <p>按时间汇总后的校园整体变化</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">报表 03</span>
+        <strong>行为统计</strong>
+        <p>专业低碳得分与行为影响权重</p>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">报表 04</span>
+        <strong>识别结果闭环</strong>
+        <p>上传图片后生成行为分析卡片</p>
+      </div>
+    </div>
+    <div class="deck-footer">
+      <span class="mono">S 备注模式 / T 主题切换 / 左右键翻页</span>
+      <span class="slide-number" data-current="1" data-total="4"></span>
+    </div>
+    <aside class="notes">
+      这一页先把答辩重点说清楚。我们不是单纯展示几个好看的图，而是解释这些图背后的形成过程。整套报表可以分成四类：楼栋能耗分布、整体趋势对比、低碳行为统计，以及图片识别后的结果闭环。后面三页我会按“数据来源、统计规则、可得结论”这个顺序展开，让老师知道这些报表不是拼出来的，而是有明确计算逻辑和使用场景的。
+    </aside>
+  </section>
+
+  <section class="slide" data-title="楼栋报表">
+    <p class="kicker">part 01 / 楼栋怎么统计</p>
+    <h2 class="section-title">楼栋类报表先看<span class="accent">最新时间步</span>，再做分布、排序和偏差判断</h2>
+    <div class="grid-two">
+      <div class="panel">
+        <h3>数据来源</h3>
+        <ul class="bullet-list">
+          <li>先从预测表中取出 <strong>最大 time_step</strong>。</li>
+          <li>再关联每栋楼的电、水实际值、预测值、误差和值班坐标。</li>
+          <li>这一批数据就是“当前楼栋状态”，供地图、排行榜和表格共用。</li>
+        </ul>
+        <div class="formula-box">
+          <div><span>气泡大小</span><code>30 + sqrt(本楼用电 / 全楼最大用电) × 46</code></div>
+          <div><span>高用电排行</span><code>按 electricityActual 降序，取前 5</code></div>
+          <div><span>表格偏差</span><code>((电误差 + 水误差) / (电实际 + 水实际)) × 100 × 0.45</code></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>老师能看到什么</h3>
+        <div class="rank-list">
+          <div class="rank-row"><span>01</span><b>哪几栋楼当前最耗能</b><i>用于优先治理对象筛选</i></div>
+          <div class="rank-row"><span>02</span><b>高用电和高用水是否重合</b><i>看资源消耗结构差异</i></div>
+          <div class="rank-row"><span>03</span><b>哪几栋楼预测偏差更大</b><i>作为后续重点跟踪对象</i></div>
+        </div>
+        <div class="mini-map">
+          <div class="bubble bubble-a">图书馆</div>
+          <div class="bubble bubble-b">实验楼</div>
+          <div class="bubble bubble-c">宿舍楼</div>
+          <div class="bubble bubble-d">教学楼</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      这一页讲楼栋类报表。它的关键不是把每栋楼都长期展开，而是先抓当前最新一批状态。后端先找最大时间步，再把这个时间步下所有楼栋的电、水实际值和预测值一起拿出来。前端在这批数据上做三件事：第一是地图气泡，按坐标摆位置，按实际用电决定气泡大小；第二是高用电排行，按实际用电从高到低取前五；第三是表格概览，把电水占比做归一化，再结合误差形成一个展示偏差等级。所以老师看到的不只是“哪栋楼高”，还能看到“高到什么程度”和“预测稳不稳”。
+    </aside>
+  </section>
+
+  <section class="slide" data-title="趋势与行为">
+    <p class="kicker">part 02 / 趋势和行为怎么统计</p>
+    <h2 class="section-title">趋势图看<span class="accent">校园整体变化</span>，行为图看<span class="accent">人群差异和干预优先级</span></h2>
+    <div class="grid-three">
+      <div class="panel compact">
+        <h3>趋势图</h3>
+        <ul class="bullet-list small">
+          <li>按 <strong>time_step</strong> 分组。</li>
+          <li>把所有楼栋在同一时间步的实际值、预测值分别求和。</li>
+          <li>前端再做 0~100 归一化，强调“走势是否一致”。</li>
+        </ul>
+        <div class="chart-spark">
+          <span class="line solid"></span>
+          <span class="line dashed"></span>
+        </div>
+      </div>
+      <div class="panel compact">
+        <h3>专业得分图</h3>
+        <ul class="bullet-list small">
+          <li>问卷汇总后，每个专业类别形成一个综合得分。</li>
+          <li>按专业编码顺序展示，不额外改排名。</li>
+          <li>用于比较不同群体的低碳行为表现差异。</li>
+        </ul>
+        <div class="bars">
+          <span style="height: 68%"></span>
+          <span style="height: 82%"></span>
+          <span style="height: 74%"></span>
+          <span style="height: 56%"></span>
+          <span style="height: 79%"></span>
+        </div>
+      </div>
+      <div class="panel compact">
+        <h3>行为影响饼图</h3>
+        <ul class="bullet-list small">
+          <li>每个行为都有用电因子和用水因子。</li>
+          <li>前端按 <strong>|电因子| + |水因子|</strong> 重算权重。</li>
+          <li>权重越大，越值得优先做倡导和干预。</li>
+        </ul>
+        <div class="donut"></div>
+      </div>
+    </div>
+    <div class="insight-strip">
+      <div><strong>趋势图</strong><span>回答“整体消耗有没有按预期变化”</span></div>
+      <div><strong>得分图</strong><span>回答“不同专业群体差异在哪”</span></div>
+      <div><strong>影响图</strong><span>回答“先抓哪些行为最有效”</span></div>
+    </div>
+    <aside class="notes">
+      这一页把整体趋势和行为统计连起来讲。趋势图的逻辑很直接：以时间步为单位，把所有楼栋的实际值和预测值分别加总，形成校园整体走势。前端再把序列归一化到 0 到 100，目的不是展示绝对数，而是看实际曲线和预测曲线的同步程度。行为统计分两块，一块是不同专业类别的综合低碳得分，它反映人群差异；另一块是行为影响权重，按用电因子和用水因子的绝对值相加来算，谁的权重大，谁就更值得优先倡导。这样报表就把“能耗变化”和“行为原因”接上了。
+    </aside>
+  </section>
+
+  <section class="slide" data-title="闭环结果">
+    <p class="kicker">part 03 / 怎么形成展示闭环</p>
+    <h2 class="section-title">最后不是只停在图表上，而是把<span class="accent">数据汇总、识别结果和训练图</span>放到一个可解释页面里</h2>
+    <div class="grid-two wide-gap">
+      <div class="panel">
+        <h3>页面形成过程</h3>
+        <div class="flow-steps">
+          <div class="flow-step"><span>01</span><b>数据库聚合</b><p>楼栋、趋势、得分、行为规则、训练图统一整理。</p></div>
+          <div class="flow-step"><span>02</span><b>前端轻量加工</b><p>做排序、归一化、偏差等级、饼图权重和展示卡片。</p></div>
+          <div class="flow-step"><span>03</span><b>上传识别闭环</b><p>图片上传后生成任务，再返回行为名称、位置、置信度和影响说明。</p></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>支撑材料</h3>
+        <div class="thumb-grid">
+          <img src="../../apps/web/public/training/electricity_prediction.png" alt="用电预测训练结果">
+          <img src="../../apps/web/public/training/training_loss.png" alt="训练损失曲线">
+          <img src="../../apps/web/public/training/water_prediction.png" alt="用水预测训练结果">
+          <img src="../../apps/web/public/training/behavior_score.png" alt="行为得分图">
+        </div>
+        <p class="closing-note">
+          对答辩老师来说，这一页最重要的结论是：系统展示的是一条完整链路，既能解释报表怎么来，也能说明这些统计结果最后如何支持分析和展示。
+        </p>
+      </div>
+    </div>
+    <div class="deck-footer">
+      <span class="mono">建议讲法：先讲来源，再讲规则，最后讲结论</span>
+      <span class="slide-number" data-current="4" data-total="4"></span>
+    </div>
+    <aside class="notes">
+      最后一页收束成闭环。前面几页已经解释了楼栋报表、趋势图和行为图怎么形成，这里要让老师看到它们最终都汇总到同一个页面里。做法上可以简单讲三步：先把数据库中的楼栋数据、趋势数据、行为得分、行为规则和训练图片统一聚合；再由前端做轻量加工，比如排序、归一化、偏差等级和权重重算；最后加上上传图片后的识别结果卡片，让系统不只会展示历史数据，也能形成“上传图片、识别行为、返回分析”的闭环。这样答辩时重点就回到实现价值，而不是陷进技术细节。
+    </aside>
+  </section>
+</div>
+
+<script src="./assets/runtime.js"></script>
+</body>
+</html>
