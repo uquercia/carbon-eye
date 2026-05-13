@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+NO_CACHE="${1:-}"
 
 cd "$SCRIPT_DIR"
 
@@ -28,6 +29,12 @@ if [ ! -f "$SCRIPT_DIR/mysql/init/001-carbon_eye_dump.sql" ] && [ ! -f "$SCRIPT_
   fi
 fi
 
-docker compose -f docker-compose.server-build.yml build api web
-docker compose -f docker-compose.server-build.yml up -d
+if [ "$NO_CACHE" = "--no-cache" ]; then
+  echo "检测到 --no-cache，开始无缓存重建 api 和 web。"
+  docker compose -f docker-compose.server-build.yml build --no-cache api web
+else
+  docker compose -f docker-compose.server-build.yml build api web
+fi
+
+docker compose -f docker-compose.server-build.yml up -d --force-recreate api web
 docker compose -f docker-compose.server-build.yml ps

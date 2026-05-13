@@ -333,3 +333,37 @@ cd /opt/carbon-eye-campus
 docker compose -f deploy/docker/docker-compose.server-build.yml build api
 docker compose -f deploy/docker/docker-compose.server-build.yml up -d api
 ```
+
+## 14. `.env` 明文、git 和缓存说明
+
+当前项目在服务器上真正生效的是：
+
+```bash
+/opt/carbon-eye-campus/deploy/docker/.env
+```
+
+这就是运行时明文配置文件，容器启动时会直接读取它。这里通常会放：
+
+```env
+MYSQL_ROOT_PASSWORD=你的数据库root密码
+MYSQL_APP_PASSWORD=你的应用数据库密码
+PUBLIC_UPLOAD_BASE_URL=http://8.136.24.4/uploads
+VISION_PROVIDER=ark
+VISION_API_KEY=你的方舟APIKey
+VISION_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+VISION_MODEL=doubao-seed-2-0-mini-260428
+```
+
+要点：
+
+- `deploy/docker/.env` 被 `.gitignore` 排除了，所以不会提交进 git。
+- 仓库里保留的是 `deploy/docker/.env.server.example`，它只是模板，不是线上实际生效文件。
+- 如果你改了服务器上的 `.env`，需要重新执行部署脚本，容器才会重新读取。
+- 如果怀疑服务器用了旧构建缓存，可以执行：
+
+```bash
+cd /opt/carbon-eye-campus
+bash deploy/docker/build-on-server.sh --no-cache
+```
+
+这会对 `api` 和 `web` 做无缓存重建，并强制重新创建容器。
