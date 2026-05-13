@@ -2,6 +2,12 @@
   padding: 54px 72px;
 }
 
+.tpl-campus-defense .slide-scroll {
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding-bottom: 110px;
+}
+
 .tpl-campus-defense .kicker {
   margin: 0 0 14px;
   color: var(--text-3);
@@ -179,6 +185,7 @@
 
 .tpl-campus-defense .table-sample {
   padding: 18px;
+  overflow: auto;
 }
 
 .tpl-campus-defense .table-sample table {
@@ -190,16 +197,63 @@
 
 .tpl-campus-defense .table-sample th,
 .tpl-campus-defense .table-sample td {
-  padding: 12px 10px;
+  padding: 12px 8px;
   border-bottom: 1px solid rgba(31, 68, 52, 0.12);
   text-align: left;
+  vertical-align: middle;
 }
 
-.tpl-campus-defense .table-sample span {
-  display: block;
-  height: 9px;
+.tpl-campus-defense .table-sample th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f2f7f4;
+}
+
+.tpl-campus-defense .level-bar {
+  width: 112px;
+  height: 10px;
   border-radius: 99px;
-  background: #1f9d55;
+  background: rgba(31, 157, 85, 0.14);
+  overflow: hidden;
+}
+
+.tpl-campus-defense .level-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1f9d55, #39b86a);
+}
+
+.tpl-campus-defense .level-bar.water {
+  background: rgba(47, 128, 237, 0.14);
+}
+
+.tpl-campus-defense .level-bar.water i {
+  background: linear-gradient(90deg, #2f80ed, #67a8ff);
+}
+
+.tpl-campus-defense .deviation-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tpl-campus-defense .deviation-tag.low {
+  color: #19663c;
+  background: rgba(31, 157, 85, 0.14);
+}
+
+.tpl-campus-defense .deviation-tag.medium {
+  color: #9a5c00;
+  background: rgba(245, 158, 11, 0.16);
 }
 
 .tpl-campus-defense .fact-list {

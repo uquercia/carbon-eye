@@ -34,9 +34,9 @@
     </div>
   </section>
 
-  <section class="slide" data-title="顶部指标与楼栋概览">
+  <section class="slide slide-scroll slide-top-overview" data-title="顶部指标与楼栋概览">
     <p class="kicker">part 01 / 顶部指标与楼栋预测概览</p>
-    <h2 class="section-title">顶部指标与楼栋预测概览展示系统当前覆盖范围、识别样例数量和楼栋能耗相对水平</h2>
+    <h2 class="section-title">顶部指标与楼栋预测概览用于快速说明系统覆盖范围、可演示数据量与当前重点楼栋</h2>
     <div class="report-grid two">
       <article class="report-card">
         <div class="sample metrics-sample">
@@ -47,29 +47,31 @@
         </div>
         <h3>顶部指标卡片</h3>
         <dl class="fact-list">
-          <div><dt>数据表</dt><dd>能耗预测结果表提供各时间批次的全校用电、用水实际值和预测值；识别样例表提供训练后可展示的识别样例；行为影响规则表提供行为规则库数量；楼栋基础信息表提供楼栋覆盖数量。</dd></div>
-          <div><dt>计算方式</dt><dd>趋势指数由当前实际值相对历史平均值的偏离程度、最新预测值相对当前实际值的上行压力共同计算得到。指数达到 80 分及以上显示为“高活跃”，70 到 79 分显示为“中高位”。识别样例数量来自识别样例表中的样例记录总数，行为规则库数量来自行为影响规则表，覆盖楼栋数来自楼栋基础信息表。</dd></div>
-          <div><dt>展示内容</dt><dd>页面顶部集中展示水电趋势活跃程度、当前可演示的识别样例数量、行为规则覆盖范围和系统覆盖楼栋数量，用于快速说明驾驶舱的数据基础和当前运行状态。</dd></div>
+          <div><dt>数据表</dt><dd><b>energy_predictions + recognition_samples + behavior_impact_rules + buildings</b>，分别提供趋势、样例、规则库和楼栋覆盖信息。</dd></div>
+          <div><dt>计算链路</dt><dd><b>最新批次汇总 -> 历史均值对比 -> 趋势指数</b>；<b>识别样例数 = recognition_samples 记录数</b>；<b>覆盖楼栋 = buildings 记录数</b>。</dd></div>
+          <div><dt>展示结论</dt><dd>这一组卡片先回答 3 个问题：<b>系统覆盖多少楼</b>、<b>当前能不能演示识别</b>、<b>水电趋势是否活跃</b>。</dd></div>
         </dl>
       </article>
 
       <article class="report-card">
         <div class="sample table-sample">
           <table>
-            <thead><tr><th>排名</th><th>楼栋</th><th>区域</th><th>用电水平</th></tr></thead>
+            <thead><tr><th>排名</th><th>楼栋</th><th>区域</th><th>用电水平</th><th>用水水平</th><th>偏差提示</th></tr></thead>
             <tbody>
-              <tr><td>1</td><td>农环大楼</td><td>北区</td><td><span style="width:100%"></span></td></tr>
-              <tr><td>2</td><td>生科大楼</td><td>北区</td><td><span style="width:96%"></span></td></tr>
-              <tr><td>3</td><td>应科大楼</td><td>中区</td><td><span style="width:92%"></span></td></tr>
-              <tr><td>4</td><td>化学大楼</td><td>中区</td><td><span style="width:68%"></span></td></tr>
+              <tr><td>1</td><td>农环大楼</td><td>北区</td><td><div class="level-bar"><i style="width:100%"></i></div></td><td><div class="level-bar water"><i style="width:88%"></i></div></td><td><em class="deviation-tag low">低偏差</em></td></tr>
+              <tr><td>2</td><td>生科大楼</td><td>北区</td><td><div class="level-bar"><i style="width:96%"></i></div></td><td><div class="level-bar water"><i style="width:91%"></i></div></td><td><em class="deviation-tag low">低偏差</em></td></tr>
+              <tr><td>3</td><td>应科大楼</td><td>中区</td><td><div class="level-bar"><i style="width:92%"></i></div></td><td><div class="level-bar water"><i style="width:84%"></i></div></td><td><em class="deviation-tag medium">中偏差</em></td></tr>
+              <tr><td>4</td><td>化学大楼</td><td>中区</td><td><div class="level-bar"><i style="width:68%"></i></div></td><td><div class="level-bar water"><i style="width:79%"></i></div></td><td><em class="deviation-tag low">低偏差</em></td></tr>
+              <tr><td>5</td><td>诊断中心</td><td>东区</td><td><div class="level-bar"><i style="width:61%"></i></div></td><td><div class="level-bar water"><i style="width:63%"></i></div></td><td><em class="deviation-tag medium">中偏差</em></td></tr>
+              <tr><td>6</td><td>人文大楼</td><td>西区</td><td><div class="level-bar"><i style="width:54%"></i></div></td><td><div class="level-bar water"><i style="width:58%"></i></div></td><td><em class="deviation-tag low">低偏差</em></td></tr>
             </tbody>
           </table>
         </div>
         <h3>楼栋水电数据可视化预测概览</h3>
         <dl class="fact-list">
-          <div><dt>数据表</dt><dd>楼栋基础信息表提供楼栋名称、区域和专业映射；能耗预测结果表提供最新一批水电实际值、预测值和误差。</dd></div>
-          <div><dt>计算方式</dt><dd>先取时间批次最大的那一组数据作为当前状态；用电水平 = 本楼实际用电量 ÷ 全部楼栋最高实际用电量 × 100；用水水平 = 本楼实际用水量 ÷ 全部楼栋最高实际用水量 × 100；排序时优先按用电水平从高到低排列。</dd></div>
-          <div><dt>展示内容</dt><dd>该表展示各楼栋当前水电相对水平，隐藏原始敏感数值，用进度条表达用电、用水强弱，并用偏差等级提示预测稳定性。</dd></div>
+          <div><dt>数据表</dt><dd><b>buildings + energy_predictions</b>，提供楼栋名称、区域、最新实际值、预测值和误差。</dd></div>
+          <div><dt>计算链路</dt><dd><b>最新 time_step -> 取全部楼栋</b>；<b>用电水平 = 本楼实际用电 / max(全部楼栋实际用电) × 100</b>；<b>用水水平 = 本楼实际用水 / max(全部楼栋实际用水) × 100</b>；<b>排序 = 用电↓ -> 用水↓ -> 综合分</b>。</dd></div>
+          <div><dt>展示结论</dt><dd>表格用脱敏进度条代替原始数值，方便答辩时直接说明 <b>谁更高</b>、<b>差距多大</b>、<b>预测是否稳定</b>。</dd></div>
         </dl>
       </article>
     </div>
