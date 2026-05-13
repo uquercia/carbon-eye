@@ -8,6 +8,11 @@
   padding-bottom: 110px;
 }
 
+.tpl-campus-defense .slide-scroll .deck-footer {
+  position: static;
+  margin-top: 18px;
+}
+
 .tpl-campus-defense .kicker {
   margin: 0 0 14px;
   color: var(--text-3);
