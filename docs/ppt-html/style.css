@@ -2,6 +2,32 @@
   padding: 54px 72px;
 }
 
+.tpl-campus-defense .home-link {
+  position: fixed;
+  top: 22px;
+  right: 26px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  border: 1px solid rgba(31, 157, 85, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #157347;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 10px 16px;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(22, 59, 43, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.tpl-campus-defense .home-link:hover {
+  border-color: rgba(31, 157, 85, 0.48);
+  background: #ffffff;
+}
+
 .tpl-campus-defense .slide-scroll {
   justify-content: flex-start;
   overflow-y: auto;

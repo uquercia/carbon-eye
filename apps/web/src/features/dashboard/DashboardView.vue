@@ -2,9 +2,11 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   Activity,
+  BookOpenText,
   Database,
   FileImage,
   Image,
+  Layers,
   PlugZap,
   Upload,
   Waves,
@@ -458,10 +460,32 @@ const taskSummaryCard = computed(() => {
 })
 
 const displayTrainingImages = computed(() => trainingImages.value.slice(0, 4))
+
+const rainDrops = Array.from({ length: 42 }, (_, index) => ({
+  id: index,
+  left: `${(index * 37) % 100}%`,
+  delay: `${-((index * 0.37) % 3.8).toFixed(2)}s`,
+  duration: `${2.6 + (index % 6) * 0.22}s`,
+  opacity: 0.18 + (index % 5) * 0.06,
+}))
 </script>
 
 <template>
   <main class="dashboard-shell">
+    <div class="rain-layer" aria-hidden="true">
+      <span
+        v-for="drop in rainDrops"
+        :key="drop.id"
+        class="rain-drop"
+        :style="{
+          left: drop.left,
+          animationDelay: drop.delay,
+          animationDuration: drop.duration,
+          opacity: drop.opacity,
+        }"
+      />
+    </div>
+
     <header class="topbar">
       <div class="brand-block">
         <div class="brand-mark">碳眸</div>
@@ -471,6 +495,14 @@ const displayTrainingImages = computed(() => trainingImages.value.slice(0, 4))
         </div>
       </div>
       <div class="topbar-actions">
+        <a class="guide-link" href="/api/html/#/1">
+          <BookOpenText :size="16" />
+          <span>报表介绍</span>
+        </a>
+        <a class="guide-link" href="/api/html/tech-stack.html">
+          <Layers :size="16" />
+          <span>技术框架</span>
+        </a>
         <span class="connection-pill"><Database :size="15" /> {{ loadingText }}</span>
         <span v-if="apiError" class="connection-pill muted">{{ apiError }}</span>
       </div>
