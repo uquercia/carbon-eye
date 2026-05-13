@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>碳眸校园技术栈说明</title>
+<link rel="stylesheet" href="./assets/fonts.css">
+<style>
+:root {
+  --bg: #eef5f0;
+  --paper: #ffffff;
+  --ink: #08253a;
+  --muted: #52687a;
+  --line: #d7e2dc;
+  --green: #1f9d55;
+  --blue: #2f80ed;
+  --amber: #f59e0b;
+  --red: #d94841;
+  --shadow: 0 18px 42px rgba(10, 45, 28, 0.10);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(31, 157, 85, 0.16), transparent 30%),
+    radial-gradient(circle at 92% 8%, rgba(47, 128, 237, 0.14), transparent 34%),
+    var(--bg);
+  color: var(--ink);
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+}
+
+.page {
+  width: min(1360px, calc(100% - 56px));
+  margin: 0 auto;
+  padding: 42px 0 64px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 26px;
+  align-items: stretch;
+  margin-bottom: 26px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.hero-main {
+  padding: 42px 44px;
+}
+
+.kicker {
+  margin: 0 0 14px;
+  color: var(--green);
+  font: 700 13px/1.2 "JetBrains Mono", Consolas, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.lead {
+  max-width: 880px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1.75;
+}
+
+.hero-side {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.stack-pill {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #f8fbf9);
+}
+
+.stack-pill b {
+  display: block;
+  font-size: 20px;
+}
+
+.stack-pill span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tag {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  border-radius: 14px;
+  color: white;
+  font: 800 15px/1.1 "JetBrains Mono", Consolas, monospace;
+}
+
+.tag.green { background: var(--green); }
+.tag.blue { background: var(--blue); }
+.tag.amber { background: var(--amber); }
+.tag.red { background: var(--red); }
+
+.section {
+  margin-top: 26px;
+  padding: 30px;
+}
+
+.section-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+}
+
+.section-title p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.tech-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.tech-card h3 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.tech-card p,
+.tech-card li {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.tech-card ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.mini-label {
+  display: inline-flex;
+  margin-bottom: 14px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.10);
+  color: var(--green);
+  font: 700 12px/1 "JetBrains Mono", Consolas, monospace;
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  position: relative;
+}
+
+.flow-step {
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff, #f8fbf9);
+  position: relative;
+}
+
+.flow-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  width: 12px;
+  height: 2px;
+  background: var(--line);
+}
+
+.flow-step:last-child::after {
+  display: none;
+}
+
+.flow-step strong {
+  display: block;
+  font-size: 19px;
+}
+
+.flow-step span {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.db-diagram {
+  position: relative;
+  min-height: 640px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(rgba(31, 157, 85, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 157, 85, 0.05) 1px, transparent 1px),
+    #fff;
+  background-size: 34px 34px;
+}
+
+.db-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.db-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.table-box {
+  min-height: 142px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--green);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.table-box.blue { border-left-color: var(--blue); }
+.table-box.amber { border-left-color: var(--amber); }
+.table-box.red { border-left-color: var(--red); }
+
+.table-box b {
+  display: block;
+  font: 800 16px/1.2 "JetBrains Mono", Consolas, monospace;
+}
+
+.table-box span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.highlight-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+}
+
+.highlight-list {
+  display: grid;
+  gap: 14px;
+}
+
+.highlight-item {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.highlight-item b {
+  display: block;
+  font-size: 19px;
+}
+
+.highlight-item span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.model-panel {
+  display: grid;
+  align-content: center;
+  min-height: 100%;
+  padding: 28px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.88), transparent 25%),
+    linear-gradient(135deg, rgba(31, 157, 85, 0.88), rgba(47, 128, 237, 0.82));
+  color: white;
+}
+
+.model-panel h3 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.model-panel p {
+  margin: 18px 0 0;
+  line-height: 1.7;
+  opacity: 0.94;
+}
+
+.footnote {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 980px) {
+  .page {
+    width: min(100% - 28px, 760px);
+    padding-top: 24px;
+  }
+
+  .hero,
+  .grid-2,
+  .grid-3,
+  .highlight-grid,
+  .flow,
+  .db-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-step::after,
+  .db-svg {
+    display: none;
+  }
+
+  .db-diagram {
+    min-height: auto;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="hero">
+    <div class="card hero-main">
+      <p class="kicker">carbon-eye campus / technology stack</p>
+      <h1>校园低碳行为识别与水电预测平台技术栈说明</h1>
+      <p class="lead">
+        本系统围绕“校园图片识别、楼栋水电预测、低碳行为分析、数据可视化展示”四个核心环节搭建。整体采用前后端分离架构，前端负责交互和图表展示，后端负责数据聚合、文件上传、识别任务调度和接口输出，数据库统一保存楼栋、预测、行为和识别结果数据。
+      </p>
+    </div>
+    <aside class="card hero-side">
+      <div class="stack-pill"><div class="tag green">WEB</div><div><b>Vue 3 + TypeScript</b><span>构建驾驶舱页面、图表交互和上传识别入口。</span></div></div>
+      <div class="stack-pill"><div class="tag blue">API</div><div><b>FastAPI + SQLAlchemy</b><span>提供数据聚合接口、上传接口和异步识别任务接口。</span></div></div>
+      <div class="stack-pill"><div class="tag amber">DB</div><div><b>MySQL 8</b><span>保存楼栋、预测、行为得分、行为规则、图片和识别结果。</span></div></div>
+      <div class="stack-pill"><div class="tag red">OPS</div><div><b>Docker + Nginx</b><span>将前端、后端、数据库容器化部署，并通过统一域名对外访问。</span></div></div>
+    </aside>
+  </section>
+
+  <section class="card section">
+    <div class="section-title">
+      <h2>前后端技术栈</h2>
+      <p>项目采用前后端分离模式。浏览器只负责展示和交互，后端统一管理数据库查询、上传文件、识别任务和数据聚合，保证页面展示口径和数据库口径一致。</p>
+    </div>
+    <div class="grid-3">
+      <article class="tech-card">
+        <span class="mini-label">frontend</span>
+        <h3>前端展示层</h3>
+        <ul>
+          <li>使用 Vue 3 组织页面组件，提升驾驶舱各模块的复用性。</li>
+          <li>使用 TypeScript 约束接口数据结构，减少字段传递错误。</li>
+          <li>使用 Vite 构建前端资源，保证开发和部署构建速度。</li>
+          <li>使用 ECharts 展示趋势图、柱状图、饼图和楼栋能耗关系图。</li>
+          <li>使用 Element Plus 完成表格、进度条、标签等基础交互组件。</li>
+        </ul>
+      </article>
+      <article class="tech-card">
+        <span class="mini-label">backend</span>
+        <h3>后端服务层</h3>
+        <ul>
+          <li>使用 FastAPI 提供 REST 接口，包含驾驶舱数据、楼栋数据、趋势数据和上传识别接口。</li>
+          <li>使用 SQLAlchemy 作为 ORM 层，将数据库表映射为 Python 模型，便于维护查询逻辑。</li>
+          <li>使用 Pydantic 定义接口输出结构，使前后端字段对应更清晰。</li>
+          <li>上传校园图片后创建识别任务，前端通过轮询接口获取识别进度和结果。</li>
+        </ul>
+      </article>
+      <article class="tech-card">
+        <span class="mini-label">deploy</span>
+        <h3>部署与访问层</h3>
+        <ul>
+          <li>使用 Docker Compose 管理 MySQL、API、Web 三个服务容器。</li>
+          <li>使用 Nginx 承载前端静态资源，并把 API 请求反向代理到后端容器。</li>
+          <li>上传文件通过后端保存到服务器目录，再由统一访问路径提供给前端展示。</li>
+          <li>答辩 HTML 页面作为静态页面随 Web 镜像一起发布，便于外部访问。</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="section-title">
+      <h2>技术栈流程图</h2>
+      <p>系统从原始数据和校园图片进入后端，经数据库、模型和聚合接口处理后，最终在前端驾驶舱中形成可解释的图表结果。</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><strong>数据接入</strong><span>导入楼栋水电预测结果、低碳行为问卷、训练结果图片，并接收用户上传的校园图片。</span></div>
+      <div class="flow-step"><strong>数据库存储</strong><span>MySQL 保存楼栋、预测、行为得分、行为规则、上传图片、识别任务和识别结果。</span></div>
+      <div class="flow-step"><strong>模型分析</strong><span>水电预测模型输出实际/预测对比；自训练行为识别模型分析校园图片中的低碳行为和影响。</span></div>
+      <div class="flow-step"><strong>后端聚合</strong><span>FastAPI 按最新批次、时间趋势、行为规则和识别结果聚合为统一接口。</span></div>
+      <div class="flow-step"><strong>前端展示</strong><span>Vue 驾驶舱将数据渲染为指标卡、楼栋气泡图、趋势图、行为占比图和识别结果卡片。</span></div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="section-title">
+      <h2>数据库表结构关系图</h2>
+      <p>数据库以楼栋和识别任务为两条主线：一条支撑水电预测和空间展示，另一条支撑图片上传、识别分析和低碳行为解释。</p>
+    </div>
+    <div class="db-diagram">
+      <svg class="db-svg" viewBox="0 0 1200 640" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ca99b"></path>
+          </marker>
+        </defs>
+        <path d="M 255 95 C 420 95, 420 95, 585 95" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+        <path d="M 255 260 C 420 260, 420 260, 585 260" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+        <path d="M 255 425 C 420 425, 420 425, 585 425" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+        <path d="M 895 260 C 980 260, 980 260, 1060 260" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+        <path d="M 895 425 C 980 425, 980 425, 1060 425" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+        <path d="M 737 425 C 737 520, 330 520, 330 510" stroke="#8ca99b" stroke-width="2" fill="none" marker-end="url(#arrow)"></path>
+      </svg>
+      <div class="db-grid">
+        <div class="table-box"><b>buildings</b><span>楼栋基础信息：楼栋名称、区域、专业映射、地图坐标。为能耗预测和楼栋气泡图提供基础维度。</span></div>
+        <div class="table-box blue"><b>energy_predictions</b><span>水电预测结果：时间批次、楼栋编号、实际用电/用水、预测用电/用水、误差值。</span></div>
+        <div class="table-box amber"><b>behavior_scores</b><span>专业行为得分：各专业类别在多项低碳行为问卷中的得分和综合得分。</span></div>
+        <div class="table-box red"><b>training_images</b><span>训练结果图片：保存模型训练曲线、预测对比图和行为得分图的访问地址。</span></div>
+
+        <div class="table-box"><b>behavior_impacts</b><span>行为影响规则：每类低碳行为的说明、用电影响因子和用水影响因子，用于行为占比图。</span></div>
+        <div class="table-box blue"><b>recognition_samples</b><span>识别样例数据：行为名称、位置、楼栋、置信度、影响摘要和水电影响估计。</span></div>
+        <div class="table-box amber"><b>uploaded_images</b><span>上传图片记录：原始文件名、服务器文件名、访问地址、文件类型和上传时间。</span></div>
+        <div class="table-box red"><b>recognition_tasks</b><span>识别任务记录：关联上传图片，保存任务状态、模型版本、错误信息和完成时间。</span></div>
+
+        <div class="table-box blue"><b>recognition_results</b><span>识别结果记录：关联识别任务，保存行为名称、位置、置信度、影响摘要和水电变化估计。</span></div>
+        <div class="table-box"><b>关系 1</b><span>buildings 与 energy_predictions、recognition_samples 通过楼栋编号关联。</span></div>
+        <div class="table-box"><b>关系 2</b><span>uploaded_images 与 recognition_tasks 通过图片编号关联，任务再关联多条 recognition_results。</span></div>
+        <div class="table-box"><b>关系 3</b><span>behavior_impacts 和 behavior_scores 为行为分析图表提供解释规则和人群得分。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="section-title">
+      <h2>项目亮点</h2>
+      <p>项目不是单纯展示静态图表，而是把数据预测、行为识别、数据脱敏展示和云端部署组合成一套完整的校园低碳分析链路。</p>
+    </div>
+    <div class="highlight-grid">
+      <div class="highlight-list">
+        <div class="highlight-item"><b>亮点一：水电预测结果可视化</b><span>系统将楼栋水电实际值、预测值和误差统一入库，并按时间批次聚合成全校趋势图，能够展示预测结果与真实变化之间的拟合情况。</span></div>
+        <div class="highlight-item"><b>亮点二：自训练行为识别模型接入</b><span>校园图片上传后进入识别任务队列，由自训练低碳行为识别模型分析图片中的行为、位置和置信度，再转化为对用电、用水影响的文字说明和结构化结果。</span></div>
+        <div class="highlight-item"><b>亮点三：敏感水电数据脱敏展示</b><span>页面不直接暴露原始水电数值，而是通过趋势指数、进度条、气泡大小和偏差等级表达相对强弱，既能支持答辩展示，也降低原始数据泄露风险。</span></div>
+        <div class="highlight-item"><b>亮点四：前后端接口统一聚合</b><span>前端首页只需要请求驾驶舱聚合接口，就能拿到楼栋、趋势、行为得分、行为规则、识别样例和训练图片，降低页面与数据库之间的耦合。</span></div>
+      </div>
+      <aside class="model-panel">
+        <h3>从“数据展示”升级为“行为分析”</h3>
+        <p>系统把楼栋水电预测、低碳行为问卷、自训练行为识别模型和校园图片上传连接在一起，形成“上传图片、识别行为、计算影响、图表展示”的闭环。答辩展示时，教师看到的不只是图表结果，还能看到每个图表背后的数据来源、计算逻辑和系统实现路径。</p>
+      </aside>
+    </div>
+  </section>
+
+  <p class="footnote">
+    技术实现口径：前端使用 Vue 3、TypeScript、Vite、ECharts、Element Plus；后端使用 FastAPI、SQLAlchemy、Pydantic、PyMySQL；数据库使用 MySQL 8；部署使用 Docker Compose 和 Nginx；算法部分包括水电预测模型、自训练低碳行为识别模型和行为影响规则计算。
+  </p>
+</main>
+</body>
+</html>

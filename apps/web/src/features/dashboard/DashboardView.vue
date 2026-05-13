@@ -207,6 +207,47 @@ function normalizeSeries(values: number[]) {
   return values.map((value) => Math.round((value / maxValue) * 100))
 }
 
+function toTrendLevel(score: number) {
+  if (score >= 80) return '高活跃'
+  if (score >= 70) return '中高位'
+  if (score >= 50) return '平稳'
+  return '低位'
+}
+
+function calculateTrendIndex(
+  points: TrendPoint[],
+  actualKey: 'electricityActual' | 'waterActual',
+  predictedKey: 'electricityPredicted' | 'waterPredicted',
+) {
+  if (points.length === 0) {
+    return {
+      score: 0,
+      level: '暂无数据',
+    }
+  }
+
+  const actualValues = points.map((item) => item[actualKey])
+  const latestPoint = points[points.length - 1]
+  const latestActual = Math.max(latestPoint?.[actualKey] ?? 0, 1)
+  const latestPredicted = Math.max(latestPoint?.[predictedKey] ?? 0, 0)
+  const averageActual = Math.max(actualValues.reduce((sum, value) => sum + value, 0) / actualValues.length, 1)
+
+  // 趋势指数 = 基础分 + 当前值相对历史均值的偏离程度 + 最新预测带来的上行压力。
+  const currentDeviation = (Math.abs(latestActual - averageActual) / averageActual) * 100
+  const forecastPressure = Math.max(((latestPredicted - latestActual) / latestActual) * 100, 0)
+  const score = Math.min(100, Math.round(50 + currentDeviation * 1.8 + forecastPressure))
+
+  return {
+    score,
+    level: toTrendLevel(score),
+  }
+}
+
+const electricityTrendIndex = computed(() =>
+  calculateTrendIndex(trendData.value, 'electricityActual', 'electricityPredicted'),
+)
+const waterTrendIndex = computed(() => calculateTrendIndex(trendData.value, 'waterActual', 'waterPredicted'))
+
 const tableData = computed(() =>
   buildingRecords.value.map((item) => {
     const maxElectricity = Math.max(...buildingRecords.value.map((building) => building.electricityActual), 1)
@@ -438,20 +479,20 @@ const displayTrainingImages = computed(() => trainingImages.value.slice(0, 4))
     <section class="metrics-grid">
       <MetricTile
         label="用电趋势指数"
-        value="高活跃"
-        meta="综合趋势评估"
+        :value="electricityTrendIndex.level"
+        :meta="`趋势指数 ${electricityTrendIndex.score}`"
         tone="green"
       />
       <MetricTile
         label="用水趋势指数"
-        value="中高位"
-        meta="综合趋势评估"
+        :value="waterTrendIndex.level"
+        :meta="`趋势指数 ${waterTrendIndex.score}`"
         tone="blue"
       />
       <MetricTile
-        label="识别行为样例"
+        label="识别样例数量"
         :value="String(recognitionSamples.length)"
-        meta="训练样例统计"
+        :meta="`行为规则库 ${behaviorImpacts.length} 类`"
         tone="amber"
       />
       <MetricTile
