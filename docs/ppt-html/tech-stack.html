@@ -389,7 +389,7 @@ h1 {
       <p class="kicker">carbon-eye campus / technology stack</p>
       <h1>校园低碳行为识别与水电预测平台技术栈说明</h1>
       <p class="lead">
-        本系统围绕“校园图片识别、楼栋水电预测、低碳行为分析、数据可视化展示”四个核心环节搭建。整体采用前后端分离架构，前端负责交互和图表展示，后端负责数据聚合、文件上传、识别任务调度和接口输出，数据库统一保存楼栋、预测、行为和识别结果数据。
+        本系统围绕<b>“校园图片识别、楼栋水电预测、低碳行为分析、数据可视化展示”</b>四个核心环节搭建。整体采用<b>前后端分离架构</b>，前端负责交互和图表展示，后端负责数据聚合、文件上传、识别任务调度和接口输出，数据库统一保存<b>楼栋、预测、行为和识别结果数据</b>。
       </p>
     </div>
     <aside class="card hero-side">
@@ -403,7 +403,7 @@ h1 {
   <section class="card section">
     <div class="section-title">
       <h2>前后端技术栈</h2>
-      <p>项目采用前后端分离模式。浏览器只负责展示和交互，后端统一管理数据库查询、上传文件、识别任务和数据聚合，保证页面展示口径和数据库口径一致。</p>
+      <p>项目采用<b>前后端分离模式</b>。浏览器只负责展示和交互，后端统一管理<b>数据库查询、上传文件、识别任务和数据聚合</b>，保证<b>页面展示口径和数据库口径一致</b>。</p>
     </div>
     <div class="grid-3">
       <article class="tech-card">
@@ -443,21 +443,21 @@ h1 {
   <section class="card section">
     <div class="section-title">
       <h2>技术栈流程图</h2>
-      <p>系统从原始数据和校园图片进入后端，经数据库、模型和聚合接口处理后，最终在前端驾驶舱中形成可解释的图表结果。</p>
+      <p>系统从<b>原始数据和校园图片</b>进入后端，经<b>数据库、模型和聚合接口</b>处理后，最终在前端驾驶舱中形成<b>可解释的图表结果</b>。</p>
     </div>
     <div class="flow">
-      <div class="flow-step"><strong>数据接入</strong><span>导入楼栋水电预测结果、低碳行为问卷、训练结果图片，并接收用户上传的校园图片。</span></div>
-      <div class="flow-step"><strong>数据库存储</strong><span>MySQL 保存楼栋、预测、行为得分、行为规则、上传图片、识别任务和识别结果。</span></div>
-      <div class="flow-step"><strong>模型分析</strong><span>水电预测模型输出实际/预测对比；自训练行为识别模型分析校园图片中的低碳行为和影响。</span></div>
-      <div class="flow-step"><strong>后端聚合</strong><span>FastAPI 按最新批次、时间趋势、行为规则和识别结果聚合为统一接口。</span></div>
-      <div class="flow-step"><strong>前端展示</strong><span>Vue 驾驶舱将数据渲染为指标卡、楼栋气泡图、趋势图、行为占比图和识别结果卡片。</span></div>
+      <div class="flow-step"><strong>数据接入</strong><span>导入<b>楼栋水电预测结果、低碳行为问卷、训练结果图片</b>，并接收用户上传的校园图片。</span></div>
+      <div class="flow-step"><strong>数据库存储</strong><span><b>MySQL</b> 保存楼栋、预测、行为得分、行为规则、上传图片、识别任务和识别结果。</span></div>
+      <div class="flow-step"><strong>模型分析</strong><span><b>水电预测模型</b>输出实际/预测对比；<b>自训练行为识别模型</b>分析校园图片中的低碳行为和影响。</span></div>
+      <div class="flow-step"><strong>后端聚合</strong><span><b>FastAPI</b> 按最新批次、时间趋势、行为规则和识别结果聚合为统一接口。</span></div>
+      <div class="flow-step"><strong>前端展示</strong><span><b>Vue 驾驶舱</b>将数据渲染为指标卡、楼栋气泡图、趋势图、行为占比图和识别结果卡片。</span></div>
     </div>
   </section>
 
   <section class="card section">
     <div class="section-title">
       <h2>数据库表结构关系图</h2>
-      <p>数据库以楼栋和识别任务为两条主线：一条支撑水电预测和空间展示，另一条支撑图片上传、识别分析和低碳行为解释。</p>
+      <p>数据库以<b>楼栋</b>和<b>识别任务</b>为两条主线：一条支撑<b>水电预测和空间展示</b>，另一条支撑<b>图片上传、识别分析和低碳行为解释</b>。</p>
     </div>
     <div class="db-diagram">
       <svg class="db-svg" viewBox="0 0 1200 640" preserveAspectRatio="none" aria-hidden="true">
@@ -485,9 +485,9 @@ h1 {
         <div class="table-box red"><b>recognition_tasks</b><span>识别任务记录：关联上传图片，保存任务状态、模型版本、错误信息和完成时间。</span></div>
 
         <div class="table-box blue"><b>recognition_results</b><span>识别结果记录：关联识别任务，保存行为名称、位置、置信度、影响摘要和水电变化估计。</span></div>
-        <div class="table-box"><b>关系 1</b><span>buildings 与 energy_predictions、recognition_samples 通过楼栋编号关联。</span></div>
-        <div class="table-box"><b>关系 2</b><span>uploaded_images 与 recognition_tasks 通过图片编号关联，任务再关联多条 recognition_results。</span></div>
-        <div class="table-box"><b>关系 3</b><span>behavior_impacts 和 behavior_scores 为行为分析图表提供解释规则和人群得分。</span></div>
+        <div class="table-box"><b>关系 1</b><span><b>buildings</b> 与 <b>energy_predictions、recognition_samples</b> 通过楼栋编号关联。</span></div>
+        <div class="table-box"><b>关系 2</b><span><b>uploaded_images</b> 与 <b>recognition_tasks</b> 通过图片编号关联，任务再关联多条 <b>recognition_results</b>。</span></div>
+        <div class="table-box"><b>关系 3</b><span><b>behavior_impacts</b> 和 <b>behavior_scores</b> 为行为分析图表提供解释规则和人群得分。</span></div>
       </div>
     </div>
   </section>
@@ -495,7 +495,7 @@ h1 {
   <section class="card section">
     <div class="section-title">
       <h2>项目亮点</h2>
-      <p>项目不是单纯展示静态图表，而是把数据预测、行为识别、数据脱敏展示和云端部署组合成一套完整的校园低碳分析链路。</p>
+      <p>项目不是单纯展示静态图表，而是把<b>数据预测、行为识别、数据脱敏展示和云端部署</b>组合成一套完整的<b>校园低碳分析链路</b>。</p>
     </div>
     <div class="highlight-grid">
       <div class="highlight-list">
@@ -506,13 +506,13 @@ h1 {
       </div>
       <aside class="model-panel">
         <h3>从“数据展示”升级为“行为分析”</h3>
-        <p>系统把楼栋水电预测、低碳行为问卷、自训练行为识别模型和校园图片上传连接在一起，形成“上传图片、识别行为、计算影响、图表展示”的闭环。答辩展示时，教师看到的不只是图表结果，还能看到每个图表背后的数据来源、计算逻辑和系统实现路径。</p>
+        <p>系统把<b>楼栋水电预测、低碳行为问卷、自训练行为识别模型和校园图片上传</b>连接在一起，形成<b>“上传图片、识别行为、计算影响、图表展示”</b>的闭环。答辩展示时，教师看到的不只是图表结果，还能看到每个图表背后的<b>数据来源、计算逻辑和系统实现路径</b>。</p>
       </aside>
     </div>
   </section>
 
   <p class="footnote">
-    技术实现口径：前端使用 Vue 3、TypeScript、Vite、ECharts、Element Plus；后端使用 FastAPI、SQLAlchemy、Pydantic、PyMySQL；数据库使用 MySQL 8；部署使用 Docker Compose 和 Nginx；算法部分包括水电预测模型、自训练低碳行为识别模型和行为影响规则计算。
+    技术实现口径：前端使用 <b>Vue 3、TypeScript、Vite、ECharts、Element Plus</b>；后端使用 <b>FastAPI、SQLAlchemy、Pydantic、PyMySQL</b>；数据库使用 <b>MySQL 8</b>；部署使用 <b>Docker Compose 和 Nginx</b>；算法部分包括 <b>水电预测模型、自训练低碳行为识别模型和行为影响规则计算</b>。
   </p>
 </main>
 </body>
